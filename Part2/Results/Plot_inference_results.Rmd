@@ -1,0 +1,192 @@
+---
+title: "Typewriter - hierarchical"
+output: pdf_document
+---
+
+```{r setup, include=F}
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.showtext = TRUE, dpi = 300) #fig.dim = c(25,5)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+```{r message=F}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tibble)
+library(gridExtra)
+library(HDInterval)
+library(showtext)
+font_add("lmroman", regular = "lmroman10-regular.otf")
+```
+
+```{r}
+# SETUP
+
+# lineage recorder
+method = "Typewriter"
+
+# multitype model prototype
+prototype = "hierarchical"
+
+# inferred parameters
+parameters = c("treeHeight", "treeLength", "editRate", 
+               "birthRate.t0", "birthRate.t1", "birthRate.t2", "birthRate.t3",
+               "deathRate.t0", "deathRate.t1", "deathRate.t2", "deathRate.t3", 
+               "migrationRate.t1", "migrationRate.t2", "migrationRate.t3")
+nParams = length(parameters)
+
+# true parameters
+true_editRate = 0.05
+true_birthRates = c("birthRate.t0" = 0.2, "birthRate.t1" = 0.18, "birthRate.t2" = 0.18, "birthRate.t3" = 0.18)
+true_deathRates = c("deathRate.t0" = 0.01, "deathRate.t1" = 0.03, "deathRate.t2" = 0.03, "deathRate.t3" = 0.03)
+if (prototype == "distinct") {
+  true_migrationRates = c("migrationRate.t1" = 0.04, "migrationRate.t2" = 0.03, "migrationRate.t3" = 0.02)
+} else if (prototype == "hierarchical") {
+  true_migrationRates = c("migrationRate.t1" = 0.08, "migrationRate.t2" = 0.06, "migrationRate.t3" = 0.04)
+}
+              
+true_treeParams = read.csv(paste0("~/Desktop/Part2/Trees/", prototype, "/treeParams.csv")) 
+
+# priors 
+priors = list()
+priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -3, sdlog = 1),
+                    "median" = qlnorm(0.5, meanlog = -3, sdlog = 1))
+priors$birthRate = c(hdi(qlnorm, 0.95, meanlog = -1.5, sdlog = 1),
+                     "median" = qlnorm(0.5, meanlog = -1.5, sdlog = 1))
+priors$deathRate = c(hdi(qexp, 0.95, rate = 25),
+                     "median" = qexp(0.5, rate = 25))
+priors$migrationRate = c(hdi(qlnorm, 0.95, meanlog = -3.25, sdlog = 1),
+                         "median" = qlnorm(0.5, meanlog = -3.25, sdlog = 1))
+
+# directory
+dir = paste0("~/Desktop/Part2/", method, "/", prototype, "/analysisOutput/")
+```
+
+```{r include=FALSE}
+# load posterior parameter estimates
+infOutputDat = readRDS(paste0(dir, "infOutput.Rdat"))
+
+# filter valid simulations
+infOutputDat = infOutputDat %>% filter(minESS >= 200)
+infOutputDat %>% summarise(validSim = n())
+
+# rename seeds
+infOutputDat$id = c(1:nrow(infOutputDat))
+true_treeParams = inner_join(true_treeParams, infOutputDat %>% select(c(seed, id)))
+```
+
+```{r fig.dim=c(6,4)}
+# EDIT RATE
+# prior: ~LogNormal(-3,1) -> 5-95% percentiles [0.0096, 0.2579]
+p <- ggplot(data = infOutputDat, aes(x=id, y=editRate_median)) +  
+  geom_point() + 
+  geom_errorbar(aes(ymin = editRate_lower, ymax = editRate_upper), alpha=0.4) + 
+  geom_hline(yintercept = true_editRate, color = "darkorange") +
+  geom_hline(yintercept = priors$editRate["median"], color = "cadetblue", linetype = "dashed") +
+  geom_ribbon(aes(ymin = priors$editRate["lower"], ymax = priors$editRate["upper"]), 
+                alpha = 0.1, fill = "cadetblue") +
+  ylim(c(0, 0.3)) +
+  theme_bw(base_family = "lmroman", base_size = 18) + 
+  xlab("Simulation") + 
+  ylab("Posterior editing rate") 
+p
+```
+
+```{r fig.dim=c(24,4)}
+# BIRTH RATES
+# prior: ~LogNormal(-1.5,1) -> 5-95% percentiles [0.0431, 1.1559]
+
+plots = list()
+for (t in c(0:3)) {
+  p <- ggplot(data = infOutputDat, aes_string(x="id", y=paste0("birthRate.t", t, "_median"))) +  
+    geom_point() + 
+    geom_errorbar(aes_string(ymin = paste0("birthRate.t", t, "_lower"), 
+                             ymax = paste0("birthRate.t", t, "_upper")), alpha=0.4) +  
+    geom_hline(yintercept = true_birthRates[paste0("birthRate.t", t)], color = "darkorange") +
+    geom_hline(yintercept = priors$birthRate["median"], color = "cadetblue", linetype = "dashed") +
+    geom_ribbon(aes(ymin = priors$birthRate["lower"], ymax = priors$birthRate["upper"]), 
+                alpha = 0.1, fill = "cadetblue") +
+    ylim(c(0, 1.5)) +
+    theme_bw(base_family = "lmroman", base_size = 18) + 
+    labs(x = "Simulation", y = "Posterior birth rate") +
+    ggtitle(paste0("type ", t))
+  plots[[length(plots)+1]] = p
+}
+do.call("grid.arrange", c(plots, ncol = 4, nrow = 1))    
+```
+
+
+```{r fig.dim=c(24,4)}
+# DEATH RATES
+# prior: ~Exp(25) -> 5-95% percentiles [0.0021, 0.1198]
+
+plots = list()
+for (t in c(0:3)) {
+  p <- ggplot(data = infOutputDat, aes_string(x="id", y=paste0("deathRate.t", t, "_median"))) +  
+    geom_point() + 
+    geom_errorbar(aes_string(ymin = paste0("deathRate.t", t, "_lower"), 
+                             ymax = paste0("deathRate.t", t, "_upper")), alpha=0.4) +  
+    geom_hline(yintercept = true_deathRates[paste0("deathRate.t", t)], color = "darkorange") +
+    geom_hline(yintercept = priors$deathRate["median"], color = "cadetblue", linetype = "dashed") +
+    geom_ribbon(aes(ymin = priors$deathRate["lower"], ymax = priors$deathRate["upper"]), 
+                alpha = 0.1, fill = "cadetblue") +
+    ylim(c(0, 0.3)) +
+    theme_bw(base_family = "lmroman", base_size = 18) + 
+    labs(x = "Simulation", y = "Posterior death rate") +
+    ggtitle(paste0("type ", t))
+  plots[[length(plots)+1]] = p
+}
+do.call("grid.arrange", c(plots, ncol = 4, nrow = 1))  
+```
+
+```{r fig.dim=c(18,4)}
+# MIGRATION RATES
+# prior: ~LogNormal(-3.25,1) -> 5-95% percentiles [, ]
+
+plots = list()
+for (t in c(1:3)) {
+  p <- ggplot(data = infOutputDat, aes_string(x="id", y=paste0("migrationRate.t", t, "_median"))) +  
+    geom_point() + 
+    geom_errorbar(aes_string(ymin = paste0("migrationRate.t", t, "_lower"), 
+                             ymax = paste0("migrationRate.t", t, "_upper")), alpha=0.4) +  
+    geom_hline(yintercept = true_migrationRates[paste0("migrationRate.t", t)], color = "darkorange") +
+    geom_hline(yintercept = priors$migrationRate["median"], color = "cadetblue", linetype = "dashed") +
+    geom_ribbon(aes(ymin = priors$migrationRate["lower"], ymax = priors$migrationRate["upper"]), 
+                alpha = 0.1, fill = "cadetblue") +
+    ylim(c(0, 1)) +
+    theme_bw(base_family = "lmroman", base_size = 18) + 
+    labs(x = "Simulation", y = "Posterior migration rate") +
+    ggtitle(paste0("to type ", t))
+  plots[[length(plots)+1]] = p
+}
+do.call("grid.arrange", c(plots, ncol = 3, nrow = 1))  
+```
+
+```{r fig.dim=c(6,4)}
+# TREE LENGTH
+p <- ggplot(data = infOutputDat, aes(x=id, y=treeLength_median)) +  
+  geom_point() + 
+  geom_errorbar(aes(ymin = treeLength_lower, ymax = treeLength_upper), alpha=0.4) +  #crossbar
+  geom_line(data = true_treeParams, aes(x=id, y=treeLength), color = "darkorange") +
+  ylim(c(0, 5000)) +
+  theme_bw(base_family = "lmroman", base_size = 18) + 
+  labs(x = "Simulation", y = "Posterior tree length")
+p 
+```
+
+```{r fig.dim=c(6,4)}
+# TREE HEIGHT
+p <- ggplot(data = infOutputDat, aes(x=id, y=treeHeight_median)) +  
+  geom_point() + 
+  geom_errorbar(aes(ymin = treeHeight_lower, ymax = treeHeight_upper), alpha=0.4) +  #crossbar
+    geom_line(data = true_treeParams, aes(x=id, y=treeHeight), color = "darkorange") +
+  ylim(c(0, 41)) +
+  theme_bw(base_family = "lmroman", base_size = 18) + 
+  labs(x = "Simulation", y = "Posterior tree height")
+p 
+```
+
+

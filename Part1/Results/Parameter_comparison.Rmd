@@ -1,0 +1,327 @@
+---
+title: TiDe vs. Typewriter
+output: pdf_document
+---
+```{r setup, include=F}
+# Script for plotting the comparison of inference performance between various experimental conditions.
+
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.dim = c(16,4), fig.showtext = TRUE, dpi = 300)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+```{r message=F}
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tibble)
+library(showtext)
+font_add("lmroman", regular = "lmroman10-regular.otf")
+colorblind_pallette <- c("#E69F00", "#56B4E9", "#009E73","#D55E00", "#CC79A7")
+```
+
+```{r} 
+# COMPARISON SETUPS
+
+#method =  "TiDe"# "Typewriter" 
+
+#setups = c("baseline_TiDe", "baseline_Typewriter")
+setups = c("TiDe_nTargets_40", "Typewriter_tapeLength_2")
+expParam = "Editing model"
+expValues = c("TiDeTree", "SciPhy")
+#dirs = c("~/Desktop/Part1/TiDe/baseline/analysisOutput/",
+#          "~/Desktop/Part1/Typewriter/baseline/analysisOutput/")
+dirs = c("~/Desktop/Part1/TiDe/nTargets_40/analysisOutput/",
+         "~/Desktop/Part1/Typewriter/tapeLength_2/analysisOutput/")
+
+#setups = c("scarringDuration_20", "scarringWindow", "scarringHeight_20", "baseline")
+#setups = c("tapeLength_2", "baseline", "tapeLength_10")
+#setups = c("nTapes_5", "baseline", "nTapes_40")
+#setups = c("nTargets_5", "baseline", "nTargets_40")
+#setups = c("editRate_0.01", "baseline", "editRate_0.15")
+
+#expParam = "Scarring window"
+#expParam = "Tape length"
+#expParam = "Number of tapes"
+#expParam = "Number of targets"
+#expParam = "Editing rate"
+
+#expValues = c("first half", "mid", "second half", "whole")
+#expValues = c(2, 5, 10)
+#expValues = c(5, 20, 40)
+#expValues = c(0.01, 0.05, 0.15)
+
+#dirs = sapply(setups, function(s) {paste0("~/Desktop/Part1/", method, "/", s, "/analysisOutput/")})
+
+trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
+tree_labels = c("tree_s" = "complete synchronous tree",
+                 "tree_ss" = "synchronous trees with sampling",
+                 "tree_sd" = "synchronous trees with cell death",
+                 "tree_sds" = "synchronous trees with cell death and sampling",
+                 "tree_bd" = "birth-death-sampling trees")
+
+parameters = c("editRate", "birthRate", "deathRate", "treeHeight", "treeLength")
+parameter_labels = c("editRate" = "editing rate", "birthRate" = "birth rate", "deathRate" = "death rate", 
+                     "treeHeight" = "tree height", "treeLength" = "tree length")
+```
+
+
+# Diversity in simulated barcodes
+
+```{r}
+# load simulation statistics
+simStatFiles = paste0(dirs, "simStats.Rdat")
+simStats = lapply(simStatFiles, readRDS)
+names(simStats) = setups
+
+simStats = lapply(simStats, function(x) {bind_rows(x, .id = "tree")})
+simStats = lapply(c(1:length(setups)), function(i) {
+  simStats[[i]] %>% mutate(expParam = expValues[i]) })
+
+simStats = bind_rows(simStats)
+
+# summarize across simulations
+simStats_summarized = full_join(
+  simStats %>% 
+    select(c(tree, nEdited, barcodeDiv, expParam)) %>% 
+    group_by(expParam, tree) %>% 
+    summarise_all(~ mean(.)) %>% 
+    gather("statistic", "mean", c("nEdited", "barcodeDiv")), 
+  simStats %>% 
+    select(c(tree, nEdited, barcodeDiv, expParam)) %>% 
+    group_by(expParam, tree) %>% 
+    summarise_all(~ sd(.)) %>% 
+    gather("statistic", "sd", c("nEdited", "barcodeDiv"))
+  ) %>%
+  mutate(tree = factor(tree, levels = trees),
+         statistic = as.factor(statistic),
+         expParam = factor(expParam, levels = expValues))
+
+# plot
+p1 <- ggplot(simStats_summarized %>% filter(statistic == "nEdited"), 
+       aes(x = expParam, y = mean, color = tree, group = tree)) +
+  geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
+  geom_line() +
+  ylim(c(0,40)) +
+  #geom_hline(yintercept = 20, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Number of edited targets", col = "") +
+  theme_bw(base_family = "lmroman", base_size = 16) 
+
+p2 <- ggplot(simStats_summarized %>% filter(statistic == "barcodeDiv"), 
+       aes(x = expParam, y = mean, color = tree, group = tree)) +
+  geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
+  geom_line() +
+  ylim(c(0,1)) +
+  geom_hline(yintercept = 1, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Barcode diversity", col = "") +
+  theme_bw(base_family = "lmroman", base_size = 16) 
+
+p1 + p2 + plot_layout(guides = "collect")
+```
+
+# Comparison of inference performance
+
+```{r}
+# load inference output files
+infPFiles = paste0(dirs, "infPerformance.Rdat")
+infP = lapply(infPFiles, readRDS)
+names(infP) = setups
+
+# define performance metrics for plotting
+perf_metrics = c("coverage", "abs_error_rel", "bias_rel", "hpd_width_rel",
+                 "hpd_proportion", "abs_error", "bias", "hpd_width")
+perf_metrics_labels = c("Coverage", 
+                        "Normalized absolute error", "Normalized bias", "Normalized HPD width",
+                        "HPD proportion", "Absolute error", "Bias", "HPD width")
+
+# define range of values
+ylim = list(c(0,1), c(0,1), c(-1,1), c(0,5),
+         c(0,1), c(0,0.05), c(-0.03, 0.03), c(0, 0.15))
+
+# simplify data
+perfDat = sapply(infP, function(setup) {
+  sapply(trees, function(tree) {
+    bind_rows(setup[[tree]], .id = "metric")
+  }, simplify = F, USE.NAMES = T)
+}, simplify = F, USE.NAMES = T)
+
+perfDat = lapply(c(1:length(setups)), function(i) {
+ bind_rows(perfDat[[i]], .id = "tree") %>% mutate(expParam = expValues[i]) })
+perfDat = bind_rows(perfDat)
+
+for (m in c(1:length(perf_metrics))) {
+  df = perfDat %>% filter(metric == perf_metrics[m])
+  
+  # summarize across simulations
+  stats = full_join(
+    df %>% 
+      group_by(expParam, tree) %>% 
+      summarise(across(parameters, ~ mean(.))) %>% 
+      gather("parameter", "mean", parameters), 
+    df %>% 
+      group_by(expParam, tree) %>% 
+      summarise(across(parameters, ~ sd(.))) %>% 
+      gather("parameter", "sd", parameters)
+    ) %>%
+    drop_na() %>%
+    mutate(parameter = factor(parameter, levels = parameters), 
+           tree = factor(tree, levels = trees),
+           expParam = factor(expParam, levels = expValues))
+  
+  if (perf_metrics[m] == "coverage") {
+    optimal = 1
+  } else {
+    optimal = 0
+  }
+  
+  # plot
+  p <- ggplot(stats, aes(x = expParam, y = mean, color = tree, group = tree)) + 
+    {if (perf_metrics[m] == "coverage") geom_point(size = 2)} + 
+    {if (perf_metrics[m] != "coverage") geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4)} +
+    geom_line() +
+    ylim(ylim[[m]]) +
+    geom_hline(yintercept = optimal, linetype = "dotted") +
+    #scale_x_continuous(breaks = expValues) +
+    scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+    labs(x = expParam, y = perf_metrics_labels[m]) +
+    theme_bw(base_family = "lmroman", base_size = 16) + 
+    theme(legend.position = "none") +
+    facet_wrap(vars(parameter), labeller = as_labeller(parameter_labels), drop = F, nrow = 1, ncol = 5)
+  
+  print(p)
+}
+```
+
+# Comparison of tree inference
+
+```{r}
+# load tree inference output files
+hpdTreesFiles = paste0(dirs, "hpdTreesOutput.Rdat")
+hpdTrees = lapply(hpdTreesFiles, readRDS)
+names(hpdTrees) = setups
+
+# simplify
+hpdTrees = lapply(hpdTrees, function(x) {bind_rows(x, .id = "tree")})
+hpdTrees = lapply(c(1:length(setups)), function(i) {
+  hpdTrees[[i]] %>% 
+    mutate(expParam = expValues[i],
+           proportion = nTrees / nTotal) })
+
+hpdTrees = bind_rows(hpdTrees) 
+
+# summarize and plot
+# Tree recovery
+hpdTrees_recovery = hpdTrees %>% 
+  select(c(expParam, tree, recovery)) %>% 
+  group_by(expParam, tree) %>% 
+  summarise(recovery = sum(recovery) / n()) %>%
+  mutate(tree = factor(tree, levels = trees),
+         expParam = factor(expParam, levels = expValues))
+
+p1 <- ggplot(hpdTrees_recovery, aes(x = expParam, y = recovery, color = tree, group = tree)) +
+  geom_point(size = 2) +
+  geom_line() +
+  ylim(c(0,1)) +
+  geom_hline(yintercept = 1, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Tree coverage", col = "") +
+  theme_bw(base_family = "lmroman", base_size = 16) 
+
+
+# Relative size of 95% credible set 
+hpdTrees_size = hpdTrees %>% 
+  group_by(expParam, tree) %>% 
+  summarise(mean = mean(proportion), sd = sd(proportion)) %>%
+  mutate(tree = factor(tree, levels = trees),
+         expParam = factor(expParam, levels = expValues))
+
+p2 <- ggplot(hpdTrees_size, aes(x = expParam, y = mean, color = tree, group = tree)) +
+  geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
+  geom_line() +
+  ylim(c(0,1)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Relative size of the 95% credible set", col = "") +
+  theme_bw(base_family = "lmroman", base_size = 16)
+
+p1 + p2 + plot_layout(guides = "collect")
+```
+
+
+## Similarity/ distance between MCC tree and true tree
+
+```{r}
+# load MCC output files
+mccFiles = paste0(dirs, "mccOutput.Rdat")
+mccOut = lapply(mccFiles, readRDS)
+
+mccOut = lapply(mccOut, function(x) {bind_rows(x, .id = "tree")})
+mccOut = lapply(c(1:length(setups)), function(i) {
+  mccOut[[i]] %>% mutate(expParam = expValues[i]) })
+mccOut = bind_rows(mccOut) 
+
+metrics = c("wRF", "Nye", "shPI")
+
+# summarize metrics across simulations
+mcc_metrics = full_join(
+  mccOut %>% 
+    group_by(expParam, tree) %>% 
+    summarise(across(metrics, ~ mean(.))) %>% 
+    gather("metric", "mean", metrics), 
+  mccOut %>% 
+    group_by(expParam, tree) %>% 
+    summarise(across(metrics, ~ sd(.))) %>% 
+    gather("metric", "sd", metrics), 
+  ) %>%
+  mutate(metric = factor(metric, levels = metrics), 
+         tree = factor(tree, levels = trees),
+         expParam = factor(expParam, levels = expValues))
+
+# plot
+p1 <- ggplot(mcc_metrics %>% filter(metric == "wRF"), 
+       aes(x = expParam, y = mean, color = tree, group = tree)) +
+  geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
+  geom_line() +
+  ylim(c(0,1)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Weighted Robinson-Foulds distance") +
+  theme_bw(base_family = "lmroman", base_size = 16) +
+  theme(legend.position = "none")
+
+p2 <- ggplot(mcc_metrics %>% filter(metric == "Nye"), 
+       aes(x = expParam, y = mean, color = tree, group = tree)) +
+  geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
+  geom_line() +
+  ylim(c(0,1)) +
+  geom_hline(yintercept = 1, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Nye similarity") +
+  theme_bw(base_family = "lmroman", base_size = 16) +
+  theme(legend.position = "none")
+
+p3 <- ggplot(mcc_metrics %>% filter(metric == "shPI"), 
+       aes(x = expParam, y = mean, color = tree, group = tree)) +
+  geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
+  geom_line() +
+  ylim(c(0,1)) +
+  geom_hline(yintercept = 1, linetype = "dotted") +
+  #scale_x_continuous(breaks = expValues) +
+  scale_color_manual(values = colorblind_pallette, labels = tree_labels) +
+  labs(x = expParam, y = "Shared Phylogenetic Information") +
+  theme_bw(base_family = "lmroman", base_size = 16) +
+  theme(legend.position = "none")
+
+p1 + p2 + p3 
+```

@@ -1,0 +1,17 @@
+.DS_Store
+.Rhistory
+mess-master
+figtree.jar
+beasts2.7.jar
+beasts2.7_init.jar
+Part1/TiDe
+Part1/Typewriter
+Part1/Trees/*.newick
+Part1/resimulation
+Part1/Results/*.pdf
+Part1/Results/*.otf
+Part2/TiDe
+Part2/Typewriter
+Part2/Trees
+Part2/Results/*.pdf
+Part2/Results/*.otf

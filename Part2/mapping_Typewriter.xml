@@ -1,0 +1,160 @@
+<beast version="2.0" namespace="feast.fileio.logfileiterator">
+
+  <!-- ALIGNMENT -->
+  <plate var="n" range="1:20">
+    <data  id="alignment.$(n)" spec="feast.fileio.AlignmentFromNexus" name="alignment"
+      fileName="Typewriter/$(prototype)/simulationOutput/tree_$(seed).alignment_$(n).nexus">
+      <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/>
+    </data>
+  </plate>
+
+  <!-- define set of cells based on alignment -->
+  <taxa id="taxonSet" spec="beast.base.evolution.alignment.TaxonSet">
+      <alignment idref="alignment.1"/>
+  </taxa>
+
+  <!-- specify tip dates -->
+  <traitSet id="dateTrait" spec="beast.base.evolution.tree.TraitSet"
+    taxa="@taxonSet" traitname="date-forward" value="0=40"/>
+
+  <!-- specify tip types -->
+  <traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="Trees/$(prototype)/tree_$(seed).types.csv" sep=","
+    taxa="@taxonSet" traitname="type"/>
+
+
+  <!-- TREE MODEL -->
+  <parameter id="origin" spec="beast.base.inference.parameter.RealParameter"
+    lower="40.0" name="stateNode" upper="40.001" value="40.001"/>
+
+  <distribution id="birthDeathMigration" spec="bdmmprime.distribution.BirthDeathMigrationDistribution"
+    conditionOnSurvival="True" frequencies="1 0 0 0" tree="@tree"
+    typeTraitSet="@typeTrait" storeNodeTypes="true">
+
+    <parameterization spec="bdmmprime.parameterization.CanonicalParameterization"
+      processLength="@origin">
+
+      <typeSet id="typeSet" spec="bdmmprime.parameterization.TypeSet" value="0,1,2,3" typeTraitSet="@typeTrait"/>
+
+      <birthRate spec="bdmmprime.parameterization.SkylineVectorParameter"
+        skylineValues="@birthRate" timesAreAges="false"/>
+      <deathRate spec="bdmmprime.parameterization.SkylineVectorParameter"
+        skylineValues="@deathRate" timesAreAges="false"/>
+      <migrationRate spec="bdmmprime.parameterization.SkylineMatrixParameter"
+        skylineValues="@migrationRate" timesAreAges="false"/>
+
+      <!-- no sampling through time -->
+      <samplingRate spec="bdmmprime.parameterization.SkylineVectorParameter"
+        skylineValues="0 0 0 0" timesAreAges="false"/>
+      <rhoSampling spec="bdmmprime.parameterization.TimedParameter"
+        times="0" timesAreAges="true" processLength="@origin" values="0.1 0.1 0.1 0.1"/>
+      <removalProb spec="bdmmprime.parameterization.SkylineVectorParameter"
+        skylineValues="1 1 1 1" timesAreAges="false"/>
+
+    </parameterization>
+  </distribution>
+
+
+  <run spec="LogFileIterator">
+
+    <!-- Get parameters from log -->
+    <logFileState spec="TraceLogFileState" logFileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.log">
+
+      <!-- Birth rates -->
+      <logFileEntry spec="LogFileRealParameter" fieldName="birthRate.1" fieldParameterIndex="0">
+        <fieldParameter id="birthRate" spec="beast.base.inference.parameter.RealParameter" value="0 0 0 0"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="birthRate.2" fieldParameterIndex="1">
+        <fieldParameter idref="birthRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="birthRate.3" fieldParameterIndex="2">
+        <fieldParameter idref="birthRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="birthRate.4" fieldParameterIndex="3">
+        <fieldParameter idref="birthRate"/>
+      </logFileEntry>
+
+      <!-- Death rates -->
+      <logFileEntry spec="LogFileRealParameter" fieldName="deathRate.1" fieldParameterIndex="0">
+        <fieldParameter id="deathRate" spec="beast.base.inference.parameter.RealParameter" value="0 0 0 0"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="deathRate.2" fieldParameterIndex="1">
+        <fieldParameter idref="deathRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="deathRate.3" fieldParameterIndex="2">
+        <fieldParameter idref="deathRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="deathRate.4" fieldParameterIndex="3">
+        <fieldParameter idref="deathRate"/>
+      </logFileEntry>
+
+      <!-- Migration rates -->
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).1" fieldParameterIndex="0">
+        <fieldParameter id="migrationRate" spec="beast.base.inference.parameter.RealParameter"
+          value="  0 0 0
+                 0   0 0
+                 0 0   0
+                 0 0 0  "/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).2" fieldParameterIndex="1">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).3" fieldParameterIndex="2">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).4" fieldParameterIndex="3">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).5" fieldParameterIndex="4">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).6" fieldParameterIndex="5">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).7" fieldParameterIndex="6">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).8" fieldParameterIndex="7">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).9" fieldParameterIndex="8">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).10" fieldParameterIndex="9">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).11" fieldParameterIndex="10">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+      <logFileEntry spec="LogFileRealParameter" fieldName="migrationRate.$(prototype).12" fieldParameterIndex="11">
+        <fieldParameter idref="migrationRate"/>
+      </logFileEntry>
+
+    </logFileState>
+
+    <!-- Get tree log to map types on trees -->
+    <logFileState spec="TreeLogFileState" logFileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.trees">
+      <tree id="tree" spec="beast.base.evolution.tree.Tree"/>
+    </logFileState>
+
+    <!-- Parameter log -->
+    <logger logEvery="10000" fileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).processed.log">
+      <log idref="birthRate"/>
+      <log idref="deathRate"/>
+      <log idref="migrationRate"/>
+      <log id="treestat" spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
+    </logger>
+
+    <!-- Typed tree log -->
+    <logger spec="beast.base.inference.Logger" fileName="Typewriter/$(prototype)/$(prototype)/inferenceOutput/tree_$(seed).typed.trees" logEvery="10000" mode="tree">
+      <log id="typeMappedTree" spec="bdmmprime.mapping.TypeMappedTree" bdmmDistrib="@birthDeathMigration"
+        frequencies="1 0 0 0" mapOnInit="false" remapOnLog="true" typeLabel="type" typeTraitSet="@typeTrait"
+        untypedTree="@tree"/>
+    </logger>
+
+    <!-- Typed node tree log -->
+    <logger id="nodeTypedTreeLogger" spec="beast.base.inference.Logger" fileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).typed.node.trees" logEvery="10000" mode="tree">
+      <log id="nodeTypedTree" spec="bdmmprime.mapping.TypedNodeTreeLogger" typedTree="@typeMappedTree"/>
+    </logger>
+
+  </run>
+</beast>
