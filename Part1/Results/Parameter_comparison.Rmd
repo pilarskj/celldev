@@ -29,13 +29,13 @@ colorblind_pallette <- c("#E69F00", "#56B4E9", "#009E73","#D55E00", "#CC79A7")
 #method =  "TiDe"# "Typewriter" 
 
 #setups = c("baseline_TiDe", "baseline_Typewriter")
-setups = c("TiDe_nTargets_40", "Typewriter_tapeLength_2")
+setups = c("TiDe_baseline", "Typewriter_sequential")
 expParam = "Editing model"
 expValues = c("TiDeTree", "SciPhy")
 #dirs = c("~/Desktop/Part1/TiDe/baseline/analysisOutput/",
 #          "~/Desktop/Part1/Typewriter/baseline/analysisOutput/")
-dirs = c("~/Desktop/Part1/TiDe/nTargets_40/analysisOutput/",
-         "~/Desktop/Part1/Typewriter/tapeLength_2/analysisOutput/")
+dirs = c("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/TiDe/baseline/analysisOutput/",
+         "/Users/julia/Desktop/Master Thesis/Code and Data/Part1/Typewriter/sequential/analysisOutput/")
 
 #setups = c("scarringDuration_20", "scarringWindow", "scarringHeight_20", "baseline")
 #setups = c("tapeLength_2", "baseline", "tapeLength_10")
@@ -105,7 +105,7 @@ p1 <- ggplot(simStats_summarized %>% filter(statistic == "nEdited"),
        aes(x = expParam, y = mean, color = tree, group = tree)) +
   geom_pointrange(aes(ymin = mean - sd/2, ymax = mean + sd/2), size = 0.4) +
   geom_line() +
-  ylim(c(0,40)) +
+  ylim(c(0,20)) +
   #geom_hline(yintercept = 20, linetype = "dotted") +
   #scale_x_continuous(breaks = expValues) +
   scale_color_manual(values = colorblind_pallette, labels = tree_labels) +

@@ -1,5 +1,5 @@
 ---
-title: "TiDe - baseline"
+title: "Typewriter - sequential"
 output: pdf_document
 ---
 
@@ -27,11 +27,11 @@ font_add("lmroman", regular = "lmroman10-regular.otf")
 # EXPERIMENTAL SCENARIO
 
 # lineage recorder
-method = "TiDe"
+method = "Typewriter"
 
 # setup
-setup = "baseline"
-editRate = 0.05
+setup = "sequential"
+editRate = 0.45
 
 # trees
 trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
@@ -42,7 +42,7 @@ tree_labels <- c("tree_s" = "complete synchronous tree",
                  "tree_bd" = "birth-death-sampling trees")
 
 # true tree parameters
-treeParams = read.csv("~/Desktop/Part1/Trees/treeParams.csv")
+treeParams = read.csv("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/Trees/treeParams.csv")
 
 # inferred parameters
 parameters = c("treeHeight", "treeLength", "editRate", "birthRate", "deathRate")
@@ -57,7 +57,7 @@ priors$deathRate = c(hdi(qexp, 0.95, rate = 25),
                      "median" = qexp(0.5, rate = 25))
 
 # directory
-dir = paste0("~/Desktop/Part1/", method, "/", setup, "/analysisOutput/")
+dir = paste0("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/", method, "/", setup, "/analysisOutput/")
 ```
 
 ```{r include=FALSE}
@@ -86,7 +86,7 @@ p1 <- ggplot(data = infOutputDat, aes(x = seed, y = editRate_median)) +
   geom_hline(yintercept = priors$editRate["median"], color = "cadetblue", linetype = "dashed") +
   geom_ribbon(aes(ymin = priors$editRate["lower"], ymax = priors$editRate["upper"]), 
                 alpha = 0.1, fill = "cadetblue") +
-  ylim(c(0, 0.3)) +
+  ylim(c(0, 1)) +
   theme_bw(base_family = "lmroman", base_size = 20) + 
   xlab("Simulation") + 
   ylab("Posterior editing rate") +

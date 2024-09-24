@@ -16,14 +16,14 @@ method = 'Typewriter'
 setup = 'baseline'
 
 # experimental parameters
-editRate = 0.05 # [0.01, 0.05, 0.1]
+editRate = 0.05 # [0.01, 0.05, 0.1, 0.45]
 if method == 'TiDe':
     nTargets = 20 # [5, 20, 40]
     scarringHeight = 40 # [40, 30, 20]
     scarringDuration = 40 # [40, 20]
 elif method == 'Typewriter':
-    nTapes = 20 # [5, 20, 40]
-    tapeLength = 5 # [2, 5, 10]
+    nTapes = 20 # [1, 5, 20, 40]
+    tapeLength = 5 # [2, 5, 10, 20]
 
 # output files
 if method == 'TiDe':
@@ -88,10 +88,14 @@ rule infer_Typewriter:
         ['Typewriter/' + setup + '/simulationOutput/{tree}_' + str(seed) + '.alignment_1.nexus' for seed in seeds]
     params:
         jobName = 'inference_Typewriter_' + setup + '_{tree}[1-' + str(nSim) + ']',
+        # Slurm:
+        # jobName = 'inference_Typewriter_' + setup + '_{tree}',
+        # nArray = str(nSim),
         inDir = 'Typewriter/' + setup + '/simulationOutput',
         outDir = 'Typewriter/' + setup + '/inferenceOutput',
     output:
         'Typewriter/' + setup + '/inferenceOutput/{tree}_1.inference.out'
     shell:
         #"sh run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}"
+        #Slurm: "sbatch --time=120:00:00 --mem-per-cpu=1024 --job-name={params.jobName} --array=1-{params.nArray} --wrap='sh run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}'"
         "bsub -W 120:00 -R 'rusage[mem=1024]' -J {params.jobName} 'sh run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}'"
