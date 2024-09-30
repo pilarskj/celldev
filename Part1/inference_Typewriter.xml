@@ -15,8 +15,8 @@
 <!-- alignments -->
 <plate var="n" range="1:$(nTapes)">
   <data  id="alignment.$(n)" spec="feast.fileio.AlignmentFromNexus" name="alignment" fileName="$(inDir)/$(tree)_$(seed).alignment_$(n).nexus">
-    <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/>
-  </data>
+    <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/> <!-- sequential: 52 -->
+    </data>
 </plate>
 
 <!-- define set of cells based on alignment -->
@@ -110,7 +110,7 @@
 
       <!-- prior on substitution model parameters -->
       <prior id="editRatePrior" name="distribution" x="@editRate">
-        <LogNormal id="editLogNormal" name="distr" M="-3" S="1"/></prior> <!-- [0.01, 0.26] -->
+        <LogNormal id="editLogNormal" name="distr" M="-3" S="1"/></prior> <!-- [0.01, 0.26], sequential: M="-1" so [0.07, 1.91] -->
 
       <!-- prior on phylodynamic parameters -->
       <prior id="birthRatePrior" name="distribution" x="@birthRate">

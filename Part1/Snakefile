@@ -72,14 +72,21 @@ rule infer_TiDe:
         'inference_TiDe.xml',
         ['TiDe/' + setup + '/simulationOutput/{tree}_' + str(seed) + '.alignment.nexus' for seed in seeds]
     params:
-        jobName = 'inference_TiDe_' + setup + '_{tree}[1-' + str(nSim) + ']',
+        # Slurm:
+        jobName = 'inference_TiDe_' + setup + '_{tree}',
+        nArray = str(nSim),
+        # LSF:
+        #jobName = 'inference_TiDe_' + setup + '_{tree}[1-' + str(nSim) + ']',
         inDir = 'TiDe/' + setup + '/simulationOutput',
         outDir = 'TiDe/' + setup + '/inferenceOutput'
     output:
         'TiDe/' + setup + '/inferenceOutput/{tree}_1.inference.out'
     shell:
-        #"sh run_inference_TiDe.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -h {scarringHeight} -d {scarringDuration}"
-        "bsub -W 120:00 -R 'rusage[mem=1024]' -J {params.jobName} 'sh run_inference_TiDe.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -h {scarringHeight} -d {scarringDuration}'"
+        #"bash run_inference_TiDe.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -h {scarringHeight} -d {scarringDuration}"
+        # Slurm: 
+        "sbatch --time=120:00:00 --mem-per-cpu=1024 --job-name={params.jobName} --array=1-{params.nArray} --wrap='bash run_inference_TiDe.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -h {scarringHeight} -d {scarringDuration}'"
+        # LSF: 
+        #"bsub -W 120:00 -R 'rusage[mem=1024]' -J {params.jobName} 'bash run_inference_TiDe.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -h {scarringHeight} -d {scarringDuration}'"
 
 
 rule infer_Typewriter:
@@ -87,15 +94,18 @@ rule infer_Typewriter:
         'inference_Typewriter.xml',
         ['Typewriter/' + setup + '/simulationOutput/{tree}_' + str(seed) + '.alignment_1.nexus' for seed in seeds]
     params:
-        jobName = 'inference_Typewriter_' + setup + '_{tree}[1-' + str(nSim) + ']',
         # Slurm:
-        # jobName = 'inference_Typewriter_' + setup + '_{tree}',
-        # nArray = str(nSim),
+        jobName = 'inference_Typewriter_' + setup + '_{tree}',
+        nArray = str(nSim),
+        # LSF:
+        #jobName = 'inference_Typewriter_' + setup + '_{tree}[1-' + str(nSim) + ']',
         inDir = 'Typewriter/' + setup + '/simulationOutput',
         outDir = 'Typewriter/' + setup + '/inferenceOutput',
     output:
         'Typewriter/' + setup + '/inferenceOutput/{tree}_1.inference.out'
     shell:
-        #"sh run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}"
-        #Slurm: "sbatch --time=120:00:00 --mem-per-cpu=1024 --job-name={params.jobName} --array=1-{params.nArray} --wrap='sh run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}'"
-        "bsub -W 120:00 -R 'rusage[mem=1024]' -J {params.jobName} 'sh run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}'"
+        #"bash run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}"
+        # Slurm: 
+        "sbatch --time=120:00:00 --mem-per-cpu=1024 --job-name={params.jobName} --array=1-{params.nArray} --wrap='bash run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}'"
+        # LSF: 
+        #"bsub -W 120:00 -R 'rusage[mem=1024]' -J {params.jobName} 'bash run_inference_Typewriter.sh -t {wildcards.tree} -i {params.inDir} -o {params.outDir} -n {nTapes} -l {tapeLength}'"

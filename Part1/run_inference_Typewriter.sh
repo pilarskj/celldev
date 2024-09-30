@@ -1,6 +1,8 @@
+#!/bin/bash
+
 # seed of alignment
-seed=$LSB_JOBINDEX
-# Slurm: seed=$SLURM_ARRAY_TASK_ID
+seed=$SLURM_ARRAY_TASK_ID # Slurm
+# seed=$LSB_JOBINDEX # LSF
 
 # tree and dirs
 while getopts "t:i:o:n:l:" flag
