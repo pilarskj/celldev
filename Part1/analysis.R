@@ -21,10 +21,13 @@ library(tibble)
 
 # clear environment
 rm(list = ls()) 
-# setwd("~/Desktop/Part1/")
+
+# adapt
+code_dir = '~/Projects/celldev'
+data_dir = '~/Projects/celldev_data'
 
 # load helper functions
-source("analysis_functions.R")
+source("analysis_functions.R") # file.path(code_dir, 'analysis', 'analysis_functions.R')
 
 
 ### SCENARIO
@@ -42,7 +45,7 @@ nSim = 20
 trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
 
 # tree parameters
-treeParams = read.csv("Trees/treeParams.csv")
+treeParams = read.csv("Trees/treeParams.csv") # file.path(code_dir, 'simulation_trees', 'treeParams.csv')
 
 # inferred parameters
 parameters = c("treeHeight", "treeLength", "editRate", 
@@ -50,10 +53,10 @@ parameters = c("treeHeight", "treeLength", "editRate",
 nParams = length(parameters)
 
 # directory
-dir = paste0(method, "/", setup, "/")
+dir = paste0(data_dir, "/", method, "/", setup)
 
 # output directory
-outDir = paste0(dir, "analysisOutput/")
+outDir = file.path(dir, "analysisOutput")
 if (!dir.exists(outDir)) {dir.create(outDir)}
 
 
@@ -62,7 +65,7 @@ if (!dir.exists(outDir)) {dir.create(outDir)}
 # summarize statistics on the simulated alignments
 simStats = lapply(trees, function(tree) {
   # get alignment files
-  simDir = paste0(dir, "simulationOutput")
+  simDir = file.path(dir, "simulationOutput")
   simFiles = list.files(simDir, pattern = paste0(tree, "_"), full.names = T)
   n = length(simFiles)
   
@@ -92,9 +95,9 @@ simStats = lapply(trees, function(tree) {
   
   # get median number of edited targets/tapes per cell 
   if (method == "TiDe"){
-    stats$nEdited = sapply(alignments, function(a) {median(rowSums(a != 0)) })
+    stats$nEdited = sapply(alignments, function(a) {median(rowSums(a != 0)) }) # use this also for Typewriter sequential
   } else if (method == "Typewriter"){
-    stats$nEdited = sapply(alignments, function(a) {median(rowSums(a %>% select(contains("V1")) != 0)) })
+    stats$nEdited = sapply(alignments, function(a) {median(rowSums(a %>% select(ends_with("V1")) != 0)) })
   }
   
   # get number of different edits made across targets and cells
@@ -123,7 +126,7 @@ simStats = lapply(trees, function(tree) {
 
 # store
 names(simStats) = trees
-saveRDS(simStats, file = paste0(outDir, "simStats.Rdat"))
+saveRDS(simStats, file = file.path(outDir, "simStats.Rdat"))
 
 
 
@@ -131,7 +134,7 @@ saveRDS(simStats, file = paste0(outDir, "simStats.Rdat"))
 # summarize inference output for each tree
 infOutput = lapply(trees, function(tree) {
   # find log files
-  infDir = paste0(dir, "inferenceOutput/")
+  infDir = file.path(dir, "inferenceOutput")
   logFiles = list.files(infDir, pattern = paste0(tree, "_.*.log")) 
   n = length(logFiles)
   
@@ -145,7 +148,7 @@ infOutput = lapply(trees, function(tree) {
     outputDat[i, "seed"] = str_extract(file, "[0-9]+")
     
     # parse beast log 
-    log = remove_burn_ins(parse_beast_tracelog_file(paste0(infDir, file)), burn_in_fraction = 0.1)
+    log = remove_burn_ins(parse_beast_tracelog_file(file.path(infDir, file)), burn_in_fraction = 0.1)
     log = log %>% rename(treeHeight = tree.height, treeLength = tree.treeLength)
     
     # check ESS
@@ -176,9 +179,9 @@ infOutput = lapply(trees, function(tree) {
 
 # store
 names(infOutput) = trees
-saveRDS(infOutput, file = paste0(outDir, "infOutput.Rdat"))
+saveRDS(infOutput, file = file.path(outDir, "infOutput.Rdat"))
 
-# infOutput = readRDS(paste0(outDir, "infOutput.Rdat"))
+# infOutput = readRDS(file.path(outDir, "infOutput.Rdat"))
 
 
 ### INFERENCE PERFORMANCE
@@ -199,7 +202,7 @@ trueParams = rbind(trueParams %>% slice(rep(which(tree == "tree_s"), each = 20))
 # calculate width of priors
 priors = list()
 priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -3, sdlog = 1),
-                    "median" = qlnorm(0.5, meanlog = -3, sdlog = 1))
+                    "median" = qlnorm(0.5, meanlog = -3, sdlog = 1)) # for Typewriter sequential: meanlog = -1
 priors$birthRate = c(hdi(qlnorm, 0.95, meanlog = -1.5, sdlog = 1),
                      "median" = qlnorm(0.5, meanlog = -1.5, sdlog = 1))
 priors$deathRate = c(hdi(qexp, 0.95, rate = 25),
@@ -262,7 +265,7 @@ infPerformance = lapply(trees, function(tree) {
 
 # store
 names(infPerformance) = trees
-saveRDS(infPerformance, file = paste0(outDir, "infPerformance.Rdat"))
+saveRDS(infPerformance, file = file.path(outDir, "infPerformance.Rdat"))
 
 
 
@@ -270,14 +273,14 @@ saveRDS(infPerformance, file = paste0(outDir, "infPerformance.Rdat"))
 # load true trees from .newick files
 trueTrees = sapply(trees, function(tree) {
   sapply(c(1:nSim), function(i) {
-    read.tree(file = paste0("Trees/", tree, "_", i, ".newick"))
+    read.tree(file = file.path(data_dir, "Trees", paste0(tree, "_", i, ".newick")))
   }, simplify = F)
 }, simplify = F, USE.NAMES = T)
 
 # analyse 95% credible sets of trees
 hpdTreesOutput = lapply(trees, function(tree) {
   # find files with tree HPDs
-  infDir = paste0(dir, "inferenceOutput/")
+  infDir = file.path(dir, "inferenceOutput")
   treesFiles = list.files(infDir, pattern = paste0(tree, "_[0-9]+.hpd.trees")) 
   n = length(treesFiles)
   
@@ -288,7 +291,7 @@ hpdTreesOutput = lapply(trees, function(tree) {
   for (i in 1:n) {
     # get trees file and its simulation seed
     file = treesFiles[i]
-    filePath = paste0(infDir, file)
+    filePath = file.path(infDir, file)
     
     seed = as.numeric(str_extract(file, "[0-9]+"))
     outputDat[i, "seed"] = seed
@@ -316,13 +319,13 @@ hpdTreesOutput = lapply(trees, function(tree) {
 
 # store
 names(hpdTreesOutput) = trees
-saveRDS(hpdTreesOutput, file = paste0(outDir, "hpdTreesOutput.Rdat"))
+saveRDS(hpdTreesOutput, file = file.path(outDir, "hpdTreesOutput.Rdat"))
 
 
 # assess similarity between MCC and true tree topologies
 mccOutput = lapply(trees, function(tree) {
   # find files with mcc tree
-  infDir = paste0(dir, "inferenceOutput/")
+  infDir = file.path(dir, "inferenceOutput")
   treesFiles = list.files(infDir, pattern = paste0(tree, "_[0-9]+.mcc.tree")) 
   n = length(treesFiles)
   
@@ -333,7 +336,7 @@ mccOutput = lapply(trees, function(tree) {
   for (i in 1:n) {
     # get mcc file and its simulation seed
     file = treesFiles[i]
-    filePath = paste0(infDir, file)
+    filePath = file.path(infDir, file)
     
     seed = as.numeric(str_extract(file, "[0-9]+"))
     outputDat[i, "seed"] = seed
@@ -362,4 +365,4 @@ mccOutput = lapply(trees, function(tree) {
 
 # store
 names(mccOutput) = trees
-saveRDS(mccOutput, file = paste0(outDir, "mccOutput.Rdat"))
+saveRDS(mccOutput, file = file.path(outDir, "mccOutput.Rdat"))

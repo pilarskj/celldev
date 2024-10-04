@@ -9,7 +9,7 @@ output: pdf_document
 rm(list = ls())
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 knitr::opts_chunk$set(fig.dim = c(26,6), fig.showtext = TRUE, dpi = 300)
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
 
 ```{r message=F}
@@ -42,22 +42,23 @@ tree_labels <- c("tree_s" = "complete synchronous tree",
                  "tree_bd" = "birth-death-sampling trees")
 
 # true tree parameters
-treeParams = read.csv("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/Trees/treeParams.csv")
+treeParams = read.csv("~/Projects/celldev/Part1/Trees/treeParams.csv")
 
 # inferred parameters
 parameters = c("treeHeight", "treeLength", "editRate", "birthRate", "deathRate")
 
 # priors 
 priors = list()
-priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -3, sdlog = 1),
-                    "median" = qlnorm(0.5, meanlog = -3, sdlog = 1))
+priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -1, sdlog = 1),
+                    "median" = qlnorm(0.5, meanlog = -1, sdlog = 1))
 priors$birthRate = c(hdi(qlnorm, 0.95, meanlog = -1.5, sdlog = 1),
                      "median" = qlnorm(0.5, meanlog = -1.5, sdlog = 1))
 priors$deathRate = c(hdi(qexp, 0.95, rate = 25),
                      "median" = qexp(0.5, rate = 25))
 
 # directory
-dir = paste0("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/", method, "/", setup, "/analysisOutput/")
+#dir = paste0("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/", method, "/", setup, "/analysisOutput/")
+dir = paste0("~/Projects/celldev_data/analysisOutput/")
 ```
 
 ```{r include=FALSE}
@@ -86,7 +87,7 @@ p1 <- ggplot(data = infOutputDat, aes(x = seed, y = editRate_median)) +
   geom_hline(yintercept = priors$editRate["median"], color = "cadetblue", linetype = "dashed") +
   geom_ribbon(aes(ymin = priors$editRate["lower"], ymax = priors$editRate["upper"]), 
                 alpha = 0.1, fill = "cadetblue") +
-  ylim(c(0, 1)) +
+  ylim(c(0, 1)) + #c(0, 2)) +
   theme_bw(base_family = "lmroman", base_size = 20) + 
   xlab("Simulation") + 
   ylab("Posterior editing rate") +

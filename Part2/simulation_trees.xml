@@ -4,7 +4,7 @@
 
     <!-- Simulate tree -->
     <simulationObject id="simulatedTree" spec="bdmmprime.trajectories.simulation.SimulatedTree"
-       minSamples="20" treeFileName="Trees/distinct/tree_$(seed).newick"> <!-- simulateUntypedTree="true">  -->
+       minSamples="20" treeFileName="Trees/distinct/tree_$(seed).newick">
 
       <parameterization spec="bdmmprime.parameterization.CanonicalParameterization">
 
@@ -41,7 +41,7 @@
       </parameterization>
 
       <finalSampleOffset spec="beast.base.inference.parameter.RealParameter" value="0"/>
-      <!-- start with type 0 (stem cell)-->
+      <!-- start with type 0 (stem cell) -->
       <frequencies spec="beast.base.inference.parameter.RealParameter" value="1 0 0 0"/>
 
     </simulationObject>

@@ -1,13 +1,23 @@
+#!/bin/bash
+
 # -----
 # Script for postprocessing all .inference.trees files for one experimental setup
 # -----
 
-# example command: OMP_NUM_THREADS=1 bsub -W 48:00 -R 'rusage[mem=10240]' -J 'postprocessing_Typewriter_baseline[1-20]' "sh run_tree_postprocessing.sh -s Typewriter/baseline"
+# make sure that you have java installed/ a java module loaded!
+# beside the beasts2.7.jar file, a local installation of BEAST2 with Tree annotator is necessary
+
+# example job submission on cluster
+# Slurm:
+#OMP_NUM_THREADS=1 sbatch --time=120 --mem-per-cpu=10240 --job-name='postprocessing' --array=1-20 --wrap='bash run_tree_postprocessing.sh -s $SCRATCH'
+# LSF:
+#OMP_NUM_THREADS=1 bsub -W 48:00 -R 'rusage[mem=10240]' -J 'postprocessing_Typewriter_baseline[1-20]' "bash run_tree_postprocessing.sh -s Typewriter/baseline"
+
+# if run locally, loop over the seeds (for seed in `seq 1 20` do ... done)
 
 # seed of alignment
-seed=$LSB_JOBINDEX
-
-module load openjdk/17.0.0_35
+seed=$SLURM_ARRAY_TASK_ID # Slurm
+# seed=$LSB_JOBINDEX # LSF
 
 # tree and dirs
 while getopts "s:" flag
@@ -33,3 +43,13 @@ do
     echo "${setup}/${tree}_${seed}: done" >> postprocessing.out
   fi
 done
+
+# check file numbers (should be the same as *.inference.trees)
+#ls /path/to/inferenceOutput/*.hpd.trees | wc -l
+#ls /path/to/inferenceOutput/*.mcc.tree | wc -l
+
+# afterwards: compress .inference.trees files using 
+# Slurm:
+#sbatch --job-name=compress --wrap='gzip --best /path/to/inferenceOutput/*.inference.trees'
+# LSF:
+#bsub -J 'compress' "gzip --best /path/to/inferenceOutput/*.inference.trees"
