@@ -15,7 +15,7 @@ source("homog/simulation_trees/tree_functions.R")
 
 # specify output paths
 params_f = 'homog/simulation_trees/tree_params.csv'
-tree_dir = '~/Projects/celldev_data/homog/Trees'
+tree_dir = '~/Projects/celldev_data/Trees'
 if (!dir.exists(tree_dir)) {dir.create(tree_dir)}
 
 # specify parameters
@@ -33,9 +33,9 @@ plot(tree_s)
 axisPhylo()
 
 # store tree parameters
-treeParams[[1]] = data.frame("tree" = "tree_s", "nDiv" = 7, "deathProb" = 0, "rho" = 1, 
-                             "nCells" = length(tree_s$tip.label), 
-                             "treeLength" = tree_s$length, "treeHeight" = tree_s$height)
+treeParams[[1]] = data.frame("tree" = paste0("tree_s_", c(1:Nsim)), "nDiv" = 7, "deathProb" = 0, "rho" = 1, 
+                             "nCells" = rep(length(tree_s$tip.label), Nsim), 
+                             "treeLength" = rep(tree_s$length, Nsim), "treeHeight" = rep(tree_s$height, Nsim))
 
 
 # synchronous trees with sampling
@@ -131,18 +131,21 @@ lapply(c(1:20), function(i) {
 })
 
 
-# calculate missing tree parameters
-treeParams = bind_rows(treeParams)
-
-# calculate approximated population-level birth and death rates for synchronous trees
-treeParams[1:61, ] = treeParams[1:61, ] %>% mutate(birthRate = (1-deathProb) * (nDiv / Texp) * log(2),
-                                                   deathRate = deathProb * (nDiv / Texp) * log(2))
-# per-lineage approximation
-# treeParams[1:61, ] = treeParams[1:61, ] %>% mutate(birthRate = (1-deathProb) * ((nDiv+1) / Texp),
-#                                                    deathRate = deathProb * ((nDiv+1) / Texp))
+# approximation of birth and death rates for synchronous trees
+treeParams[1:4] = lapply(treeParams[1:4], function(p) {
+  # population-level 
+  p %>% mutate(birthRate = (1-deathProb) * (nDiv / Texp) * log(2),
+               deathRate = deathProb * (nDiv / Texp) * log(2))
+  # per-lineage
+  # p %>% mutate(birthRate = (1-deathProb) * ((nDiv+1) / Texp),
+  #              deathRate = deathProb * ((nDiv+1) / Texp))
+})
 
 # calculate death probability for birth-death trees
-treeParams[62:81, ] = treeParams[62:81, ] %>% mutate(deathProb = deathRate / (birthRate + deathRate))
+treeParams[[5]] = treeParams[[5]] %>% mutate(deathProb = deathRate / (birthRate + deathRate))
+
+treeParams = bind_rows(treeParams)
+
 
 # save tree parameters
 write.csv(treeParams, file = params_f, quote = F, row.names = F)

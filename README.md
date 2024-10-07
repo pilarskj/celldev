@@ -26,8 +26,8 @@ In our study, we consider the development of **homogeneous** (single-type) and *
 
 3.  Bayesian inference of cell phylogenies and phylodynamic parameters
 
-4.  Analysis and evaluation of the inference performance
+Analysis and evaluation of the inference performance
 
-    ------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 *TODO: add installation tips (java, .jar file - in bin?, snakemake, HPC with Slurm?, R)*

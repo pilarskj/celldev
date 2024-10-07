@@ -1,0 +1,145 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=F}
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.showtext = TRUE, dpi = 300)
+```
+
+```{r libs, message=F}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tibble)
+library(showtext)
+library(HDInterval)
+font_add("lmroman", regular = "~/lmroman10-regular.otf") # Latex font
+palette = c("#E69F00", "#56B4E9", "#009E73","#D55E00", "#CC79A7") # colorblind palette
+code_dir = '~/Projects/celldev'
+analysis_dir = '~/Projects/celldev_data/analysisOutput' # settings: TiDe, Typewriter baseline
+```
+
+```{r reference}
+# trees
+trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
+
+tree_labels = c("tree_s" = "synchronous tree",
+                "tree_ss" = "synchronous trees with sampling",
+                "tree_sd" = "synchronous trees with cell death",
+                "tree_sds" = "synchronous trees with cell death and sampling",
+                "tree_bd" = "birth-death-sampling trees")
+
+# inferred parameters
+parameters = c("birthRate", "deathRate", "treeHeight", "treeLength", "editRate")
+
+# true parameters
+treeParams = read.csv(file.path(code_dir, 'homog/simulation_trees/tree_params.csv'))
+editRate_true = 0.05
+
+# priors 
+priors = list()
+priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -1, sdlog = 1), 
+                    "median" = qlnorm(0.5, meanlog = -1, sdlog = 1))
+priors$birthRate = c(hdi(qlnorm, 0.95, meanlog = -1.5, sdlog = 1),
+                     "median" = qlnorm(0.5, meanlog = -1.5, sdlog = 1))
+priors$deathRate = c(hdi(qexp, 0.95, rate = 25),
+                     "median" = qexp(0.5, rate = 25))
+```
+
+```{r data, include=FALSE}
+# load posterior parameter estimates
+infOutput = readRDS(file.path(analysis_dir, "infOutput.Rdat"))
+infOutputDat = bind_rows(infOutput, .id = "tree")
+
+# join tables
+treeParams = treeParams %>%
+  select(tree, birthRate_true = birthRate, deathRate_true = deathRate, 
+         treeHeight_true = treeHeight, treeLength_true = treeLength) %>%
+  mutate(seed = str_extract(tree, '[0-9]+') %>% as.numeric) %>%
+  mutate(tree = str_remove(tree, '_[0-9]+'))
+infOutputDat = left_join(infOutputDat, treeParams, by = c('tree', 'seed'))
+
+# filter valid simulations
+infOutputDat = infOutputDat %>% 
+  mutate(tree = factor(tree, levels = trees)) %>%
+  filter(minESS > 200)
+
+# number of simulations with ESS > 200
+infOutputDat %>% group_by(tree) %>% summarise(validSim = n())
+
+# assign ID
+infOutputDat$ID = seq(1:nrow(infOutputDat))
+```
+
+
+```{r inference_sqeezed}
+# editing rate
+pE = ggplot(data = infOutputDat, aes(x = ID, y = editRate_median, color = tree)) +
+  geom_ribbon(aes(ymin = priors$editRate["lower"], ymax = priors$editRate["upper"]), 
+              alpha = 0.2, fill = "grey", color = 'grey', linewidth = 0) +
+  # geom_pointrange(x = -2, ymin = priors$editRate['lower'], y = priors$editRate['median'], ymax = priors$editRate['upper'], 
+  #                 color = 'darkgrey', size = 0.4, alpha = 0.5, linewidth = 1) + 
+  geom_pointrange(aes(ymin = editRate_lower, ymax = editRate_upper), size = 0.1, alpha = 0.4, linewidth = 1) + 
+  geom_segment(aes(x = 0, xend = 100, y = editRate_true, yend = editRate_true), color = 'black', alpha = 0.5, linewidth = 0.2) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  ylim(c(0, 2)) + 
+  labs(x = "Simulation", y = "Posterior editing rate", color = "") +
+  theme_classic()#(base_family = "lmroman", base_size = 20) 
+
+# birth rate
+pB = ggplot(data = infOutputDat, aes(x = ID, y = birthRate_median, color = tree)) +
+  geom_ribbon(aes(ymin = priors$birthRate["lower"], ymax = priors$birthRate["upper"]), 
+              alpha = 0.2, fill = "grey", color = 'grey', linewidth = 0) +
+  geom_pointrange(aes(ymin = birthRate_lower, ymax = birthRate_upper), size = 0.1, alpha = 0.6, linewidth = 1) + 
+  geom_step(aes(y = birthRate_true), color = 'black', alpha = 0.5) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  ylim(c(0, 1.25)) + 
+  labs(x = "Simulation", y = "Posterior birth rate", color = "") +
+  theme_classic()#base_family = "lmroman", base_size = 20) 
+
+# death rate
+pD = ggplot(data = infOutputDat, aes(x = ID, y = deathRate_median, color = tree)) +
+  geom_ribbon(aes(ymin = priors$deathRate["lower"], ymax = priors$deathRate["upper"]), 
+              alpha = 0.2, fill = "grey", color = 'grey', linewidth = 0) +
+  geom_pointrange(aes(ymin = deathRate_lower, ymax = deathRate_upper), size = 0.1, alpha = 0.6, linewidth = 1) + 
+  geom_step(aes(y = deathRate_true), color = 'black', alpha = 0.5) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  ylim(c(0, 0.2)) + 
+  labs(x = "Simulation", y = "Posterior death rate", color = "") +
+  theme_classic()#base_family = "lmroman", base_size = 20) 
+
+# tree height
+pTH = ggplot(data = infOutputDat %>% arrange(tree, treeHeight_true) %>% mutate(ID = c(1:nrow(infOutputDat))), 
+             aes(x = ID, y = treeHeight_median, color = tree)) +
+  geom_pointrange(aes(ymin = treeHeight_lower, ymax = treeHeight_upper), size = 0.1, alpha = 0.6, linewidth = 1) + 
+  geom_line(aes(y = treeHeight_true), color = 'black', alpha = 0.5) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  ylim(c(0, 42)) + 
+  labs(x = "Simulation", y = "Posterior tree height", color = "") +
+  theme_classic()#base_family = "lmroman", base_size = 20) 
+
+
+# tree length
+pTL = ggplot(data = infOutputDat %>% arrange(tree, treeLength_true) %>% mutate(ID = c(1:nrow(infOutputDat))), 
+             aes(x = ID, y = treeLength_median, color = tree)) +
+  geom_pointrange(aes(ymin = treeLength_lower, ymax = treeLength_upper), size = 0.1, alpha = 0.6, linewidth = 1) + 
+  geom_line(aes(y = treeLength_true), alpha = 0.5) + #, color = 'black',
+  #geom_point(aes(y = treeLength_true), color = 'black', alpha = 0.5, shape = '-', size = 5) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  ylim(c(0, 4000)) + 
+  labs(x = "Simulation", y = "Posterior tree length", color = "") +
+  theme_classic()#base_family = "lmroman", base_size = 20) 
+
+# alternative:
+pTL = ggplot(data = infOutputDat, aes(x = treeLength_true, y = treeLength_median, color = tree)) +
+  geom_pointrange(aes(ymin = treeLength_lower, ymax = treeLength_upper), size = 0.1, alpha = 0.6, linewidth = 1) + 
+  geom_abline(slope = 1, intercept = 0, alpha = 0.5, color = 'black') +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  xlim(c(0, 3200)) + 
+  ylim(c(0, 3200)) + 
+  labs(x = "True tree length", y = "Inferred tree length", color = "") +
+  theme_classic()#base_family = "lmroman", base_size = 20) 
+```

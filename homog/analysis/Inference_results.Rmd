@@ -5,11 +5,9 @@ output: pdf_document
 
 ```{r setup, include=F}
 # Script for plotting the estimates and posterior distributions of the phylogenetic and phylodynamic parameters of cell development.
-
 rm(list = ls())
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 knitr::opts_chunk$set(fig.dim = c(26,6), fig.showtext = TRUE, dpi = 300)
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
 
 ```{r message=F}
@@ -20,52 +18,43 @@ library(stringr)
 library(tibble)
 library(showtext)
 library(HDInterval)
-font_add("lmroman", regular = "lmroman10-regular.otf")
+font_add("lmroman", regular = "~/lmroman10-regular.otf")
+code_dir = '~/Projects/celldev'
+analysis_dir = '~/Projects/celldev_data/analysisOutput' # settings: TiDe, Typewriter baseline
 ```
 
-```{r}
-# EXPERIMENTAL SCENARIO
-
-# lineage recorder
-method = "Typewriter"
-
-# setup
-setup = "sequential"
-editRate = 0.45
-
+```{r reference}
 # trees
 trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
-tree_labels <- c("tree_s" = "complete synchronous tree",
-                 "tree_ss" = "synchronous trees with sampling",
-                 "tree_sd" = "synchronous trees with cell death",
-                 "tree_sds" = "synchronous trees with cell death and sampling",
-                 "tree_bd" = "birth-death-sampling trees")
 
-# true tree parameters
-treeParams = read.csv("~/Projects/celldev/Part1/Trees/treeParams.csv")
+tree_labels = c("tree_s" = "synchronous tree",
+                "tree_ss" = "synchronous trees with sampling",
+                "tree_sd" = "synchronous trees with cell death",
+                "tree_sds" = "synchronous trees with cell death and sampling",
+                "tree_bd" = "birth-death-sampling trees")
 
 # inferred parameters
-parameters = c("treeHeight", "treeLength", "editRate", "birthRate", "deathRate")
+parameters = c("birthRate", "deathRate", "treeHeight", "treeLength", "editRate")
+
+# true parameters
+treeParams = read.csv(file.path(code_dir, 'homog/simulation_trees/tree_params.csv'))
+editRate_true = 0.45 # 0.45 for Typewriter sequential, otherwise 0.05
 
 # priors 
 priors = list()
-priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -1, sdlog = 1),
+priors$editRate = c(hdi(qlnorm, 0.95, meanlog = -1, sdlog = 1), # meanlog = -1 for Typewriter sequential, otherwise -3
                     "median" = qlnorm(0.5, meanlog = -1, sdlog = 1))
 priors$birthRate = c(hdi(qlnorm, 0.95, meanlog = -1.5, sdlog = 1),
                      "median" = qlnorm(0.5, meanlog = -1.5, sdlog = 1))
 priors$deathRate = c(hdi(qexp, 0.95, rate = 25),
                      "median" = qexp(0.5, rate = 25))
-
-# directory
-#dir = paste0("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/", method, "/", setup, "/analysisOutput/")
-dir = paste0("~/Projects/celldev_data/analysisOutput/")
 ```
 
 ```{r include=FALSE}
 # Number of simulations with ESS > 200
 
 # load posterior parameter estimates
-infOutput = readRDS(paste0(dir, "infOutput.Rdat"))
+infOutput = readRDS(file.path(analysis_dir, "infOutput.Rdat"))
 
 # create table and filter valid simulations
 infOutputDat = bind_rows(infOutput, .id = "tree")
@@ -83,11 +72,11 @@ infOutputDat %>% group_by(tree) %>% summarise(validSim = n())
 p1 <- ggplot(data = infOutputDat, aes(x = seed, y = editRate_median)) +  
   geom_point() + 
   geom_errorbar(aes(ymin = editRate_lower, ymax = editRate_upper), alpha = 0.5) + 
-  geom_hline(yintercept = editRate, color = "darkorange") +
+  geom_hline(yintercept = editRate_true, color = "darkorange") +
   geom_hline(yintercept = priors$editRate["median"], color = "cadetblue", linetype = "dashed") +
   geom_ribbon(aes(ymin = priors$editRate["lower"], ymax = priors$editRate["upper"]), 
                 alpha = 0.1, fill = "cadetblue") +
-  ylim(c(0, 1)) + #c(0, 2)) +
+  ylim(c(0, 2)) + #c(0, 1)) +
   theme_bw(base_family = "lmroman", base_size = 20) + 
   xlab("Simulation") + 
   ylab("Posterior editing rate") +
@@ -148,11 +137,6 @@ treestatParams = treeParams %>%
   mutate(seed = as.numeric(str_extract(tree, "[0-9]+"))) %>%
   mutate(tree = factor(str_remove(tree, "_[0-9]+"), levels = trees)) %>%
   select(tree, seed, treeHeight, treeLength) 
-treestatParams = rbind(treestatParams %>% 
-                         slice(rep(which(tree == "tree_s"), each = 20)) %>%
-                         mutate(seed = c(1:20)),
-                       treestatParams) %>%
-  filter(!is.na(seed))
 
 # TREE LENGTH
 p4 <- ggplot(data = infOutputDat, aes(x = seed, y = treeLength_median)) +  
@@ -181,3 +165,4 @@ p5 <- ggplot(data = infOutputDat, aes(x = seed, y = treeHeight_median)) +
   facet_wrap(vars(tree), labeller = as_labeller(tree_labels), nrow = 1, ncol = 5)
 p5
 ```
+
