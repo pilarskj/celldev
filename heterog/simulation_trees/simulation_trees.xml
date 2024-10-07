@@ -1,0 +1,80 @@
+<beast version="2.0">
+
+  <run spec="feast.simulation.GPSimulator" nSims="1">
+
+    <!-- Simulate tree -->
+    <simulationObject id="simulatedTree" spec="bdmmprime.trajectories.simulation.SimulatedTree"
+       minSamples="20" treeFileName="Trees/distinct/tree_$(seed).newick"> <!-- /hierarchical/ -->
+
+      <parameterization spec="bdmmprime.parameterization.CanonicalParameterization">
+
+        <!-- length of simulation: 40 time units -->
+        <processLength id="origin" spec="beast.base.inference.parameter.RealParameter" value="40"/>
+
+        <!-- 4 types -->
+        <typeSet id="typeSet" spec="bdmmprime.parameterization.TypeSet" value="0,1,2,3"/>
+
+        <!-- phylodynamic parameters -->
+        <birthRate spec="bdmmprime.parameterization.SkylineVectorParameter" typeSet="@typeSet" skylineValues="0.2 0.18 0.18 0.18"/>
+        <deathRate spec="bdmmprime.parameterization.SkylineVectorParameter" typeSet="@typeSet" skylineValues="0.01 0.03 0.03 0.03"/>
+        <migrationRate spec="bdmmprime.parameterization.SkylineMatrixParameter" typeSet="@typeSet">
+          <skylineValues spec="beast.base.inference.parameter.RealParameter"
+            value= "  0.04 0.03 0.02
+                         0   0 0
+                         0 0   0
+                         0 0 0 "/> <!-- distinct types -->
+       <!-- value="  0.08 0 0
+                   0   0.06 0
+                   0 0   0.04
+                   0 0 0     "/>  hierarchical types -->
+
+
+        </migrationRate>
+
+        <!-- no sampling through time, only at present -->
+        <samplingRate spec="bdmmprime.parameterization.SkylineVectorParameter" typeSet="@typeSet" skylineValues="0 0 0 0"/>
+        <!-- sampling proportion -->
+        <rhoSampling spec="bdmmprime.parameterization.TimedParameter" typeSet="@typeSet"
+          times="40" timesAreAges="False" values="0.1 0.1 0.1 0.1" processLength="@origin"/>
+        <removalProb spec="bdmmprime.parameterization.SkylineVectorParameter" typeSet="@typeSet" skylineValues="1 1 1 1"/>
+
+      </parameterization>
+
+      <finalSampleOffset spec="beast.base.inference.parameter.RealParameter" value="0"/>
+      <!-- start with type 0 (stem cell) -->
+      <frequencies spec="beast.base.inference.parameter.RealParameter" value="1 0 0 0"/>
+
+    </simulationObject>
+
+    <!-- Tree stats log -->
+    <logger spec="beast.base.inference.Logger" logEvery="1" fileName="Trees/distinct/tree_$(seed).log"> <!-- /hierarchical/ -->
+      <log id="treeStat" spec="beast.base.evolution.tree.TreeStatLogger" tree="@simulatedTree"/>
+    </logger>-->
+
+    <!-- Typed node tree log -->
+    <logger spec="beast.base.inference.Logger" logEvery="1" mode="tree" fileName="Trees/distinct/tree_$(seed).typed.node.trees"> <!-- /hierarchical/ -->
+      <log id="nodeTypedTree" spec="bdmmprime.mapping.TypedNodeTreeLogger" typedTree="@simulatedTree"/>
+    </logger>
+
+  </run>
+</beast>
+
+
+<!-- Run bash script:
+#!/bin/bash
+
+# set paths
+code_dir="~/Projects/celldev"
+data_dir="~/Projects/celldev_data"
+
+cd ${data_dir}
+
+# run simulation of trees (adapt the number)
+## make sure that output directories exists and modify the prototype (distinct vs. hierarchical) as needed!
+for seed in `seq 1 20` 
+do
+  java -jar ${code_dir}/bin/beasts2.7.jar -overwrite -seed ${seed} ${code_dir}/heterog/simulation_trees/simulation_trees.xml
+done
+-->
+
+
