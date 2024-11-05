@@ -18,15 +18,17 @@ Further, we use the phylodynamic models [BDSKY](https://github.com/BEAST2-Dev/bd
 
 ------------------------------------------------------------------------
 
-The repository adheres to the following structure: We consider the development of **homogeneous** (single-type) and **heterogeneous** (multi-type) cell populations. For both, our workflow consists of fours steps:
+The repository adheres to the following structure: We consider the development of **homogeneous** (single-type) and **heterogeneous** (multi-type) cell populations. For both, our workflow consists of four steps:
 
 1.  Simulation of lineage trees
 
-2.  Simulation of CRISPR-based lineage recordings (resulting in 'barcodes')
+2.  Simulation of CRISPR lineage recordings (resulting in 'barcodes')
 
 3.  Bayesian inference of cell phylogenies and phylodynamic parameters
 
 4.  Analysis and evaluation of the inference performance
+
+Additionally, the directory 'figures' contains code to reproduce the graphs from the manuscript.
 
 ------------------------------------------------------------------------
 
