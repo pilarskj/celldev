@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time 8:00:00
+#SBATCH --time=8:00:00
 #SBATCH --mem-per-cpu=10240
 #SBATCH --job-name=postprocessing_TiDe_hierarchical
 #SBATCH --array=1-20

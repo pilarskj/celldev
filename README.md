@@ -4,7 +4,7 @@ This repository contains code to reproduce the results of the paper **"Assessing
 
 ------------------------------------------------------------------------
 
-We simulate CRISPR-based lineage recordings and apply Bayesian inference in BEAST2 for the joint inference of time-scaled lineage trees and parameters of the cell population processes. We evaluate the inference performance under various conditions and assess how much information on cell development the recordings provide.
+We simulate CRISPR lineage recordings and apply Bayesian inference in BEAST 2 for the joint inference of time-scaled cell lineage trees and parameters of the cell population processes. We evaluate the inference performance under various conditions and assess how much information on cell development the recordings provide.
 
 We use the following BEAST2 packages:
 
@@ -18,7 +18,7 @@ Further, we use the phylodynamic models [BDSKY](https://github.com/BEAST2-Dev/bd
 
 ------------------------------------------------------------------------
 
-In our study, we consider the development of **homogeneous** (single-type) and **heterogeneous** (multi-type) cell populations. For both, the workflow consists of the following steps:
+The repository adheres to the following structure: We consider the development of **homogeneous** (single-type) and **heterogeneous** (multi-type) cell populations. For both, our workflow consists of fours steps:
 
 1.  Simulation of lineage trees
 
@@ -26,7 +26,7 @@ In our study, we consider the development of **homogeneous** (single-type) and *
 
 3.  Bayesian inference of cell phylogenies and phylodynamic parameters
 
-Analysis and evaluation of the inference performance
+4.  Analysis and evaluation of the inference performance
 
 ------------------------------------------------------------------------
 

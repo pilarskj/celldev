@@ -27,7 +27,7 @@ params_labels = c('birthRate' = 'birth rate',
                   'treeLength' = 'tree length')
 
 trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
-tree_labels = c("tree_s" = "synchronous tree",
+tree_labels = c("tree_s" = "synchronous trees",
                 "tree_ss" = "synchronous trees with sampling",
                 "tree_sd" = "synchronous trees with cell death",
                 "tree_sds" = "synchronous trees with cell death and sampling",
@@ -52,7 +52,7 @@ plot_coverage_lollipop <- function(infP) {
     labs(x = NULL, y = "Coverage (%)", color = NULL) 
 
   return(g)
-}
+} # add tree topology?
 
 
 plot_bias_violin <- function(infP) {
@@ -85,7 +85,7 @@ plot_hpd_violin <- function(infP) {
 
   g = ggplot(data, aes(x = parameter, y = hpd_proportion, color = tree)) +
     geom_violin(position = position_dodge(0.6), show.legend = FALSE) +
-    geom_hline(yintercept = 0.2, linetype = 'dashed') + # threshold at 0.2
+    geom_hline(yintercept = 0.1, linetype = 'dashed') + # threshold at 0.2
     scale_y_continuous(limits = c(0, 1.5), breaks = seq(0, 1.5, 0.5)) +
     scale_x_discrete(labels = par_labels) +
     scale_color_manual(values = palette, labels = tree_labels) +
@@ -129,13 +129,13 @@ plot_summary <- function(path_to_res, title) {
   return(g)
 }
 
-g_td = plot_summary(path_td, 'A: TiDeTree') 
-g_tw = plot_summary(path_tw, 'B: SciPhy')
+g_td = plot_summary(path_td, 'A: non-sequential recordings') 
+g_tw = plot_summary(path_tw, 'B: sequential recordings')
 
 png('Figure2.png', height = 8, width = 11, units = "in", res = 300)
 g_td / g_tw +
   plot_layout(guides = 'collect') &
-  theme(legend.position = 'bottom', legend.direction = "vertical", 
+  theme(legend.position = 'bottom', legend.direction = "vertical", legend.justification = "right", 
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 8),
         axis.text.y = element_text(size = 8))
 dev.off()

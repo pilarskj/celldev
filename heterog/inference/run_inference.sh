@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time 120:00:00
+#SBATCH --time=120:00:00
 #SBATCH --mem-per-cpu=5120
 #SBATCH --job-name=inference_TiDe_hierarchical
 #SBATCH --array=1-20

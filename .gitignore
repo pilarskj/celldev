@@ -12,3 +12,4 @@ mess-master
 *.types.csv
 *.log
 *.gz
+*.svg
