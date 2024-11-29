@@ -10,8 +10,7 @@ library(assertthat)
 
 # set path to repo as working directory
 # setwd("~/Projects/celldev")
-
-source('Part1/analysis_functions.R')
+source('analysis_functions.R')
 
 data_dir = '~/Projects/celldev_data'
 

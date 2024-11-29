@@ -114,8 +114,10 @@ get_tree_recovery = function(hpdTrees, trueTree) {
 
 calc_hamming_dist <- function(x) {
   "Calculate pairwise Hamming distance between barcodes of an alignment"
+  
   xt <- t(x)
   hdist = sapply(1:nrow(x), function(y) colSums(xt != xt[, y]))
+  
   return(median(hdist, na.rm = T))
 }
 

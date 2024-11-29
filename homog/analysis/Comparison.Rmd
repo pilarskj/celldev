@@ -32,10 +32,10 @@ colorblind_pallette <- c("#E69F00", "#56B4E9", "#009E73","#D55E00", "#CC79A7")
 setups = c("TiDe_baseline", "Typewriter_sequential")
 expParam = "Editing model"
 expValues = c("TiDeTree", "SciPhy")
-#dirs = c("~/Desktop/Part1/TiDe/baseline/analysisOutput/",
-#          "~/Desktop/Part1/Typewriter/baseline/analysisOutput/")
-dirs = c("/Users/julia/Desktop/Master Thesis/Code and Data/Part1/TiDe/baseline/analysisOutput/",
-         "/Users/julia/Desktop/Master Thesis/Code and Data/Part1/Typewriter/sequential/analysisOutput/")
+
+# adapt
+dirs = c("Part1/TiDe/baseline/analysisOutput/",
+         "Part1/Typewriter/sequential/analysisOutput/")
 
 #setups = c("scarringDuration_20", "scarringWindow", "scarringHeight_20", "baseline")
 #setups = c("tapeLength_2", "baseline", "tapeLength_10")

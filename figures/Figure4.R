@@ -5,6 +5,7 @@ library(tidyr)
 library(stringr)
 library(ggplot2)
 library(ggsignif)
+library(scales)
 library(showtext)
 library(patchwork)
 
@@ -29,12 +30,18 @@ plot_wRF_boxplot <- function(mccP) {
     bind_rows(.id = 'setting') 
 
   g = ggplot(data, aes(x = setting, y = wRF)) + 
-    geom_boxplot() + 
+    geom_boxplot(outlier.size = 0.5) + 
     geom_signif(comparisons = list(c("non-sequential", "sequential")), test = 't.test', map_signif_level = T) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(x = NULL, y = "Weighted RF distance")
+  
+  # Welch's t-test
+  ns = data %>% filter(setting == "non-sequential") %>% pull(wRF)
+  s = data %>% filter(setting == "sequential") %>% pull(wRF)
+  t.test(ns, s)
     
   return(g)
+
 }
 
 
@@ -51,18 +58,18 @@ plot_hpd_boxplot <- function(infP) {
     bind_rows(.id = 'setting') 
 
   g = ggplot(data, aes(x = setting, y = hpd_proportion)) + 
-    geom_boxplot() + 
+    geom_boxplot(outlier.size = 0.5) + 
     geom_signif(comparisons = list(c("non-sequential", "sequential")), test = 't.test', map_signif_level = T) +
-    scale_y_continuous(limits = c(0, 1.5), breaks = seq(0, 1.5, 0.5)) +
+    scale_y_continuous(breaks = scales::pretty_breaks()) +
+    expand_limits(y = 0) + 
     labs(x = NULL, y = "HPD proportion") +
-    facet_wrap(vars(parameter), labeller = as_labeller(params_labels))
+    facet_wrap(vars(parameter), labeller = as_labeller(params_labels), scales = 'free_y')
   
   return(g)
 }
 
 
-png('Figure4.png', height = 5, width = 8, units = "in", res = 300)
+png('Figure4.png', height = 4.5, width = 8, units = "in", res = 300)
 plot_wRF_boxplot(mccP) + plot_hpd_boxplot(infP) + plot_layout(widths = c(1, 2)) + plot_annotation(tag_levels = 'A')
 dev.off()
-
 

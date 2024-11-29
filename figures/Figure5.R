@@ -15,15 +15,16 @@ font_add("lmroman", regular = "~/lmroman10-regular.otf") # Latex font
 showtext_auto()
 theme_set(theme_classic(base_size = 12, base_family = 'lmroman'))
 
-# data
-dir = "/Volumes/stadler/cEvoUnpublished/2023-Julia-Celldev/Part2"
+# paths
+data_dir = "/Volumes/stadler/cEvoUnpublished/2023-Julia-Celldev/Part2"
+code_dir = "~/Projects/celldev"
 
 # objects
 transitions = c("distinct", "hierarchical")
 
 # seeds to keep for results
 seeds = sapply(transitions, function(t) {
-  trees = read.csv(paste0("~/Projects/celldev/heterog/simulation_trees/tree_params_", t, ".csv")) 
+  trees = read.csv(paste0(code_dir, "/heterog/simulation_trees/tree_params_", t, ".csv")) 
   return(trees$seed) 
 }) %>% as.data.frame
 
@@ -36,7 +37,7 @@ prior = c(hdi(qlnorm, 0.95, meanlog = -3.25, sdlog = 1),
 
 plot_migration <- function(model, transition, title) {
 
-  infO = readRDS(file.path(dir, model, transition, 'analysisOutput', 'infOutput.Rdat')) 
+  infO = readRDS(file.path(data_dir, model, transition, 'analysisOutput', 'infOutput.Rdat')) 
 
   data = infO %>%
     filter(seed %in% seeds[[transition]]) %>%
@@ -76,7 +77,7 @@ plot_migration <- function(model, transition, title) {
 
 plot_mcc <- function(model) {
   mccO = sapply(transitions, function(x) {
-    data = readRDS(file.path(dir, model, x, 'analysisOutput', 'mccOutput.Rdat'))
+    data = readRDS(file.path(data_dir, model, x, 'analysisOutput', 'mccOutput.Rdat'))
     data = data %>% filter(seed %in% seeds[[x]])
     }, simplify = F, USE.NAMES = T) %>%
     bind_rows(.id = 'transition')
@@ -101,7 +102,7 @@ plot_mcc <- function(model) {
     scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
     scale_color_manual(values = palette[1:2], labels = c('terminal', 'chain-like')) +
     theme(axis.ticks.x = element_blank()) + # remove x axis ticks
-    labs(x = NULL, y = "Correct types (%)", color = 'transitions') 
+    labs(x = NULL, y = "Correct ancestral cell types (%)", color = 'transitions') 
   
   return(g1 + g2)
 }
@@ -112,8 +113,7 @@ p2 = plot_migration('TiDe', 'hierarchical', 'chain-like transitions')
 p3 = plot_migration('Typewriter', 'distinct', 'terminal transitions')
 p4 = plot_migration('Typewriter', 'hierarchical', 'chain-like transitions')
 pA = p1 + ggtitle('non-sequential recordings') + p2 + 
-  p3 + ggtitle('sequential recordings') + p4 #+ 
-#plot_layout(axis_titles = 'collect')
+  p3 + ggtitle('sequential recordings') + p4 
 
 p5 = plot_mcc('TiDe')
 p6 = plot_mcc('Typewriter')
@@ -123,7 +123,7 @@ pB = p5 / p6 + plot_layout(guides = 'collect') &
         legend.title = element_text(size = 10), legend.text = element_text(size = 8))
 
 
-pdf('Figure5.pdf', height = 8, width = 12)#, units = "in", res = 300) 
+pdf('figures/Figure5.pdf', height = 8, width = 12)#, units = "in", res = 300) 
 (pA | pB) + plot_layout(widths = c(2, 1))
 dev.off()
 

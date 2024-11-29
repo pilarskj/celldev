@@ -14,7 +14,7 @@ We use the following BEAST2 packages:
 
 *Note:* SciPhy was initially developed for the analysis of DNA Typewriter recordings (see [Choi et al., 2022](https://www.nature.com/articles/s41586-022-04922-8)). The code in this repository was written with a previous version of the SciPhy package which used the naming 'typewriter' instead of 'sciphy' (see commit [#30 Renaming classes](https://github.com/azwaans/SciPhy/commit/ead14aa57874a6c8157cba155f288ad8bf28707e)).
 
-Further, we use the phylodynamic models [BDSKY](https://github.com/BEAST2-Dev/bdsky/tree/master/src/bdsky/evolution/speciation) and [BDMM-Prime](https://github.com/tgvaughan/BDMM-Prime/tree/master){.uri}, and the add-on [feast](https://github.com/tgvaughan/feast).
+Further, we use the phylodynamic models [BDSKY](https://github.com/BEAST2-Dev/bdsky/tree/master/src/bdsky/evolution/speciation) and [BDMM-Prime](https://github.com/tgvaughan/BDMM-Prime/tree/master), and the add-on [feast](https://github.com/tgvaughan/feast).
 
 ------------------------------------------------------------------------
 
@@ -32,4 +32,4 @@ Additionally, the directory 'figures' contains code to reproduce the graphs from
 
 ------------------------------------------------------------------------
 
-*TODO: add installation tips (java, .jar file - in bin?, snakemake, HPC with Slurm?, R)*
+*TODO: describe setup (.jar file in bin?, snakemake, HPC with Slurm, R versions and packages)*

@@ -143,9 +143,8 @@ treeParams[1:4] = lapply(treeParams[1:4], function(p) {
 
 # calculate death probability for birth-death trees
 treeParams[[5]] = treeParams[[5]] %>% mutate(deathProb = deathRate / (birthRate + deathRate))
-
 treeParams = bind_rows(treeParams)
-
 
 # save tree parameters
 write.csv(treeParams, file = params_f, quote = F, row.names = F)
+
