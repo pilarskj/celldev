@@ -22,6 +22,13 @@ params_labels = c('birthRate' = 'birth rate',
                   'treeHeight' = 'tree height', 
                   'treeLength' = 'tree length')
 
+trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
+tree_labels = c("tree_s" = "synchronous trees",
+                "tree_ss" = "synchronous trees with sampling",
+                "tree_sd" = "synchronous trees with cell death",
+                "tree_sds" = "synchronous trees with cell death and sampling",
+                "tree_bd" = "birth-death trees with sampling")
+
 settings_td = data.frame(
   setting = c('baseline', 'editRate_0.01', 'editRate_0.15', 'nTargets_5', 'nTargets_40', 'scarringDuration_20', 'scarringWindow', 'scarringHeight_20'),
   level = c('', '0.01', '0.15', '5', '40', 'first half', 'mid', 'second half')) %>%
@@ -51,15 +58,17 @@ plot_diversity_boxplot <- function(simStats, settings) {
       select(tree, seed, barcodeDiv)}, simplify = F) %>%
     bind_rows(.id = 'setting') %>%
     left_join(settings) %>%
-    mutate(level = factor(level, levels = settings$level)) 
+    mutate(level = factor(level, levels = settings$level),
+           tree = factor(tree, levels = trees)) 
   
   baseline = data %>% filter(setting == 'baseline') %>% pull(barcodeDiv) %>% median
   
-  g = ggplot(data, aes(x = level, y = barcodeDiv)) + 
+  g = ggplot(data, aes(x = level, y = barcodeDiv, color = tree)) + 
     geom_boxplot(outlier.size = 0.5) + 
     geom_hline(yintercept = baseline, linetype = 'dashed') +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
-    labs(x = NULL, y = "Barcode diversity") +
+    scale_color_manual(values = palette, labels = tree_labels) +
+    labs(x = NULL, y = "Barcode diversity", color = NULL) +
     facet_grid(cols = vars(manipulation), scales = 'free_x', space = 'free_x')
   
   return(g)
@@ -75,19 +84,20 @@ plot_bias_violin <- function(infP, settings) {
       mutate(parameter = factor(parameter, levels = params))}, simplify = F) %>%
     bind_rows(.id = 'setting') %>%
     left_join(settings) %>%
-    mutate(level = factor(level, levels = settings$level)) 
+    mutate(level = factor(level, levels = settings$level),
+           tree = factor(tree, levels = trees)) 
   
   baseline = data %>% filter(setting == 'baseline') %>% group_by(parameter) %>% summarize(median = median(bias))
-
-  g = ggplot(data, aes(x = level, y = bias, color = manipulation)) + 
-    geom_violin(show.legend = F) + 
+  
+  g = ggplot(data, aes(x = level, y = bias, color = tree)) + 
+    geom_violin(show.legend = F, position = position_dodge(0.6)) + 
     geom_hline(data = baseline, aes(yintercept = median), linetype = 'dashed') +
     scale_y_continuous(limits = c(-1, 2), breaks = seq(-1, 2, 1)) +
     scale_color_manual(values = palette) +
     labs(x = NULL, y = "Relative bias") +
     facet_grid(rows = vars(parameter), cols = vars(manipulation), labeller = labeller(parameter = params_labels),
                scales = 'free_x', space = 'free_x')
-    
+  
   return(g)
 }
 
@@ -101,12 +111,13 @@ plot_hpd_violin <- function(infP, settings) {
       mutate(parameter = factor(parameter, levels = params))}, simplify = F) %>%
     bind_rows(.id = 'setting') %>%
     left_join(settings) %>%
-    mutate(level = factor(level, levels = settings$level)) 
+    mutate(level = factor(level, levels = settings$level),
+           tree = factor(tree, levels = trees))  
   
   baseline = data %>% filter(setting == 'baseline') %>% group_by(parameter) %>% summarize(median = median(hpd_width))
   
-  g = ggplot(data, aes(x = level, y = hpd_width, color = manipulation)) + 
-    geom_violin(show.legend = F) + 
+  g = ggplot(data, aes(x = level, y = hpd_width, color = tree)) + 
+    geom_violin(show.legend = F, position = position_dodge(0.6)) + 
     geom_hline(data = baseline, aes(yintercept = median), linetype = 'dashed') +
     expand_limits(y = c(0, 1)) +
     scale_y_continuous(breaks = scales::pretty_breaks()) +
@@ -144,6 +155,14 @@ plot_summary <- function(path, settings, title) {
 p_td = plot_summary(path_td, settings_td, 'A: non-sequential recordings')
 p_tw = plot_summary(path_tw, settings_tw, 'B: sequential recordings')
 
-png('SuppFigure3.png', height = 18, width = 12, units = "in", res = 300) 
-wrap_plots(p_td, p_tw)
+#png('SuppFigure3.png', height = 18, width = 12, units = "in", res = 300) 
+#wrap_plots(p_td, p_tw)
+#dev.off()
+
+png('SuppFigure3A.png', height = 12, width = 10, units = "in", res = 300) 
+p_td
+dev.off()
+
+png('SuppFigure3B.png', height = 12, width = 10, units = "in", res = 300) 
+p_tw
 dev.off()

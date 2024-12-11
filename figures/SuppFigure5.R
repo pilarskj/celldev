@@ -32,16 +32,25 @@ params_labels = c('birthRate' = 'birth rate',
                   'treeHeight' = 'tree height', 
                   'treeLength' = 'tree length')
 
+trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
+tree_labels = c("tree_s" = "synchronous trees",
+                "tree_ss" = "synchronous trees with sampling",
+                "tree_sd" = "synchronous trees with cell death",
+                "tree_sds" = "synchronous trees with cell death and sampling",
+                "tree_bd" = "birth-death trees with sampling")
+
 # optional
 plot_diversity_boxplot <- function(simStats) {
   data = lapply(simStats, function(x) {x %>% 
       bind_rows(.id = 'tree') %>%
       select(tree, seed, barcodeDiv)}) %>%
-    bind_rows(.id = 'setting') 
+    bind_rows(.id = 'setting') %>%
+    mutate(tree = factor(tree, levels = trees))
   
-  g = ggplot(data, aes(x = setting, y = barcodeDiv)) + 
-    geom_boxplot(outlier.size = 0.5) + 
+  g = ggplot(data, aes(x = setting, y = barcodeDiv, color = tree)) + 
+    geom_boxplot(show.legend = F, outlier.size = 0.5) + 
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+    scale_color_manual(values = palette, labels = tree_labels) +
     labs(x = NULL, y = "Barcode diversity")
   
   return(g)
@@ -54,21 +63,16 @@ plot_bias_violin <- function(infP) {
       bind_rows(.id = 'tree') %>%
       select(tree, seed, all_of(params)) %>%
       pivot_longer(cols = all_of(params), names_to = 'parameter', values_to = 'bias') %>%
-      mutate(parameter = factor(parameter, levels = params)) }) %>%
+      mutate(parameter = factor(parameter, levels = params),
+             tree = factor(tree, levels = trees)) }) %>%
     bind_rows(.id = 'setting') 
   
-  # g = ggplot(data, aes(x = setting, y = bias)) + 
-  #   geom_violin() + 
-  #   labs(x = NULL, y = "Relative bias") +
-  #   facet_grid(rows = vars(parameter), labeller = as_labeller(params_labels))
-  
-  g = ggplot(data, aes(x = parameter, y = bias, color = setting)) + 
-    geom_violin(show.legend = FALSE) + 
+  g = ggplot(data, aes(x = setting, y = bias, color = tree)) + 
+    geom_violin(show.legend = F, position = position_dodge(0.6)) + 
     scale_x_discrete(labels = params_labels) +
-    scale_color_manual(values = palette[c(2,5)]) +
+    scale_color_manual(values = palette, labels = tree_labels) +
     labs(x = NULL, y = "Relative bias") +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 8),
-          axis.text.y = element_text(size = 8))
+    facet_grid(rows = vars(parameter), labeller = labeller(parameter = params_labels))
   
   return(g)
 }
@@ -80,24 +84,18 @@ plot_hpd_violin <- function(infP) {
       bind_rows(.id = 'tree') %>%
       select(tree, seed, all_of(params)) %>%
       pivot_longer(cols = all_of(params), names_to = 'parameter', values_to = 'hpd_width') %>%
-      mutate(parameter = factor(parameter, levels = params)) }) %>%
+      mutate(parameter = factor(parameter, levels = params),
+             tree = factor(tree, levels = trees)) }) %>%
     bind_rows(.id = 'setting') 
   
-  # g = ggplot(data, aes(x = setting, y = hpd_width)) + 
-  #   geom_violin() + 
-  #   expand_limits(y = c(0, 1)) +
-  #   scale_y_continuous(breaks = scales::pretty_breaks()) +
-  #   labs(x = NULL, y = "Relative HPD width") +
-  #   facet_grid(rows = vars(parameter), labeller = as_labeller(params_labels), scales = 'free_y')
-  
-  g = ggplot(data, aes(x = parameter, y = hpd_width, color = setting)) + 
-    geom_violin() + 
+  g = ggplot(data, aes(x = setting, y = hpd_width, color = tree)) + 
+    geom_violin(position = position_dodge(0.6)) + 
     scale_x_discrete(labels = params_labels) +
-    scale_color_manual(values = palette[c(2,5)]) +
+    expand_limits(y = 1) +
+    scale_y_continuous(breaks = pretty_breaks()) +
+    scale_color_manual(values = palette, labels = tree_labels) +
     labs(x = NULL, y = "Relative HPD width", color = NULL) +
-    theme(legend.position = "inside", legend.position.inside = c(0.8, 0.9),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 8),
-          axis.text.y = element_text(size = 8))
+    facet_grid(rows = vars(parameter), scales = 'free_y', labeller = labeller(parameter = params_labels))
   
   return(g)
 }
@@ -136,15 +134,34 @@ plot_treesize_boxplot <- function(hpdTrees) {
 }
 
 
+plot_wRF_boxplot <- function(mccP) {
+  data = lapply(mccP, function(x) {x %>% 
+      bind_rows(.id = 'tree') %>%
+      select(tree, seed, wRF)}) %>%
+    bind_rows(.id = 'setting') %>%
+    mutate(tree = factor(tree, levels = trees))
+  
+  g = ggplot(data, aes(x = setting, y = wRF, color = tree)) + 
+    geom_boxplot(show.legend = F, outlier.size = 0.5) + 
+    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+    scale_color_manual(values = palette, labels = tree_labels) +
+    labs(x = NULL, y = "Weighted RF distance")
+  
+  return(g)
+}
+
+
 plot_Nye_boxplot <- function(mccP) {
   data = lapply(mccP, function(x) {x %>% 
       bind_rows(.id = 'tree') %>%
       select(tree, seed, Nye)}) %>%
-    bind_rows(.id = 'setting') 
+    bind_rows(.id = 'setting') %>%
+    mutate(tree = factor(tree, levels = trees))
 
-  g = ggplot(data, aes(x = setting, y = Nye)) + 
-    geom_boxplot(outlier.size = 0.5) + 
+  g = ggplot(data, aes(x = setting, y = Nye, color = tree)) + 
+    geom_boxplot(show.legend = F, outlier.size = 0.5) + 
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+    scale_color_manual(values = palette, labels = tree_labels) +
     labs(x = NULL, y = "Nye similarity")
   
   return(g)
@@ -155,11 +172,13 @@ plot_shPI_boxplot <- function(mccP) {
   data = lapply(mccP, function(x) {x %>% 
       bind_rows(.id = 'tree') %>%
       select(tree, seed, shPI)}) %>%
-    bind_rows(.id = 'setting') 
+    bind_rows(.id = 'setting') %>%
+    mutate(tree = factor(tree, levels = trees))
   
-  g = ggplot(data, aes(x = setting, y = shPI)) + 
-    geom_boxplot(outlier.size = 0.5) + 
+  g = ggplot(data, aes(x = setting, y = shPI, color = tree)) + 
+    geom_boxplot(show.legend = F, outlier.size = 0.5) + 
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+    scale_color_manual(values = palette, labels = tree_labels) +
     labs(x = NULL, y = "Shared Phylogenetic Information")
   
   return(g)
@@ -168,11 +187,18 @@ plot_shPI_boxplot <- function(mccP) {
 
 p1 = plot_bias_violin(infP)
 p2 = plot_hpd_violin(infP)
-p3 = plot_Nye_boxplot(mccP)
-p4 = plot_shPI_boxplot(mccP)
+p3 = plot_wRF_boxplot(mccP)
+p4 = plot_Nye_boxplot(mccP)
+p5 = plot_shPI_boxplot(mccP)
 
-png('SuppFigure5.png', height = 8, width = 10, units = "in", res = 300)
+# png('SuppFigure5.png', height = 8, width = 10, units = "in", res = 300)
+# (p1 + ggtitle('A') + p2) /
+#    (p3 + ggtitle('B') + p4) 
+# dev.off()
+
+png('SuppFigure5.png', height = 12, width = 10, units = "in", res = 300)
 (p1 + ggtitle('A') + p2) /
-   (p3 + ggtitle('B') + p4) #+
-#   plot_layout(heights = c(3, 1))
+  (p3 + ggtitle('B') + p4 + p5) +
+  plot_layout(guides = 'collect', heights = c(2, 1)) & 
+  theme(legend.position = "bottom", legend.direction = "vertical", legend.justification = "right")
 dev.off()

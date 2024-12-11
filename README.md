@@ -6,7 +6,7 @@ This repository contains code to reproduce the results of the paper **"Assessing
 
 We simulate CRISPR lineage recordings and apply Bayesian inference in BEAST 2 for the joint inference of time-scaled cell lineage trees and parameters of the cell population processes. We evaluate the inference performance under various conditions and assess how much information on cell development the recordings provide.
 
-We use the following BEAST2 packages:
+We use the following BEAST 2 packages:
 
 [TiDeTree](https://github.com/seidels/tidetree): models CRISPR-Cas9 editing on multiple independent target sites; editing outcomes are indels
 
@@ -32,4 +32,4 @@ Additionally, the directory 'figures' contains code to reproduce the graphs from
 
 ------------------------------------------------------------------------
 
-*TODO: describe setup (.jar file in bin?, snakemake, HPC with Slurm, R versions and packages)*
+System requirements: We run the inference on a HPC cluster with the Slurm batch system and a Java module provided. We automatized the simulations and inference using Snakemake. We analyzed the data in R.

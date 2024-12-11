@@ -32,7 +32,7 @@ tree_labels = c("tree_s" = "synchronous trees",
                 "tree_ss" = "synchronous trees with sampling",
                 "tree_sd" = "synchronous trees with cell death",
                 "tree_sds" = "synchronous trees with cell death and sampling",
-                "tree_bd" = "birth-death-sampling trees")
+                "tree_bd" = "birth-death trees with sampling")
 
 
 # plots for HPD trees

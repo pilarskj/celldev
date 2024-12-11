@@ -38,7 +38,7 @@ plot_wRF_boxplot <- function(mccP) {
   # Welch's t-test
   ns = data %>% filter(setting == "non-sequential") %>% pull(wRF)
   s = data %>% filter(setting == "sequential") %>% pull(wRF)
-  t.test(ns, s)
+  t.test(ns, s, paired = TRUE)
     
   return(g)
 
