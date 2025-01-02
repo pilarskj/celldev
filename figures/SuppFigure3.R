@@ -155,14 +155,7 @@ plot_summary <- function(path, settings, title) {
 p_td = plot_summary(path_td, settings_td, 'A: non-sequential recordings')
 p_tw = plot_summary(path_tw, settings_tw, 'B: sequential recordings')
 
-#png('SuppFigure3.png', height = 18, width = 12, units = "in", res = 300) 
-#wrap_plots(p_td, p_tw)
-#dev.off()
-
-png('SuppFigure3A.png', height = 12, width = 10, units = "in", res = 300) 
+pdf('figures/SuppFigure3.pdf', height = 12, width = 10) 
 p_td
-dev.off()
-
-png('SuppFigure3B.png', height = 12, width = 10, units = "in", res = 300) 
 p_tw
 dev.off()

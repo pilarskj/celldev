@@ -129,7 +129,7 @@ plot_summary <- function(path_to_res, title) {
 g_td = plot_summary(path_td, 'A: non-sequential recordings') 
 g_tw = plot_summary(path_tw, 'B: sequential recordings')
 
-png('SuppFigure2.png', height = 8, width = 11, units = "in", res = 300)
+pdf('figures/SuppFigure2.pdf', height = 8, width = 11)
 g_td / g_tw +
   plot_layout(guides = 'collect') &
   theme(legend.position = 'bottom', legend.direction = "vertical", legend.justification = "right")

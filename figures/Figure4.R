@@ -69,7 +69,7 @@ plot_hpd_boxplot <- function(infP) {
 }
 
 
-png('Figure4.png', height = 4.5, width = 8, units = "in", res = 300)
+pdf('figures/Figure4.pdf', height = 4.5, width = 8)
 plot_wRF_boxplot(mccP) + plot_hpd_boxplot(infP) + plot_layout(widths = c(1, 2)) + plot_annotation(tag_levels = 'A')
 dev.off()
 

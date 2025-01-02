@@ -58,7 +58,7 @@ plot_wRF_boxplot <- function(path, settings) {
   baseline = data %>% filter(setting == 'baseline') %>% pull(wRF) %>% median
 
   g = ggplot(data, aes(x = level, y = wRF)) + 
-    geom_boxplot() + 
+    geom_boxplot(outlier.size = 0.5) + 
     geom_hline(yintercept = baseline, linetype = 'dashed') +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(x = NULL, y = "Weighted RF distance") +
@@ -108,7 +108,7 @@ pB = plot_hpd_pointrage(path_td, settings_td)
 pC = plot_wRF_boxplot(path_tw, settings_tw)
 pD = plot_hpd_pointrage(path_tw, settings_tw)
 
-png('Figure3.png', height = 8, width = 9, units = "in", res = 300) 
+pdf('figures/Figure3.pdf', height = 8, width = 9) 
 p_td = pA + ggtitle('A: non-sequential recordings') + theme(plot.title.position = "plot") + pB + plot_layout(ncol = 2, widths = c(2, 1))
 p_tw = pC + ggtitle('B: sequential recordings') + theme(plot.title.position = "plot") + pD + plot_layout(ncol = 2, widths = c(2, 1))
 p_td / p_tw  

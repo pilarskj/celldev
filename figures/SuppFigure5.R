@@ -191,12 +191,8 @@ p3 = plot_wRF_boxplot(mccP)
 p4 = plot_Nye_boxplot(mccP)
 p5 = plot_shPI_boxplot(mccP)
 
-# png('SuppFigure5.png', height = 8, width = 10, units = "in", res = 300)
-# (p1 + ggtitle('A') + p2) /
-#    (p3 + ggtitle('B') + p4) 
-# dev.off()
 
-png('SuppFigure5.png', height = 12, width = 10, units = "in", res = 300)
+pdf('figures/SuppFigure5.pdf', height = 12, width = 10)
 (p1 + ggtitle('A') + p2) /
   (p3 + ggtitle('B') + p4 + p5) +
   plot_layout(guides = 'collect', heights = c(2, 1)) & 

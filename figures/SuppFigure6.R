@@ -56,7 +56,7 @@ params_labels = c('birthRate' = 'birth rate',
 type_labels = c("0" = "type 0", "1" = "(to) type 1", "2" = "(to) type 2", "3" = "(to) type 3")
 
 
-plot_coverage_lollipop <- function(paths) {
+plot_coverage_lollipop <- function(infP) {
   data = lapply(infP, '[[', 'coverage') 
   data$distinct = data$distinct %>% filter(seed %in% seeds$distinct)
   data$hierarchical = data$hierarchical %>% filter(seed %in% seeds$hierarchical)
@@ -146,6 +146,6 @@ plot_summary <- function(recorder, title) {
 g_td = plot_summary('TiDe', 'A: non-sequential recordings')
 g_tw = plot_summary('Typewriter', 'B: sequential recordings')
 
-png('SuppFigure6.png', height = 10, width = 14, units = "in", res = 300) 
+pdf('figures/SuppFigure6.pdf', height = 10, width = 14) 
 g_td / g_tw + plot_layout(guides = 'collect') & theme(legend.position = 'bottom')
 dev.off()
