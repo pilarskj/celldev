@@ -1,4 +1,4 @@
-# Figure 5
+# Figure 6
 
 library(dplyr)
 library(tidyr)
@@ -69,7 +69,7 @@ plot_migration <- function(model, transition, title) {
     ylim(c(0, 1)) + 
     scale_color_manual(values = palette[3:5]) +
     facet_wrap(vars(type)) +
-    labs(subtitle = title, x = "Simulation", y = "Posterior migration rate") 
+    labs(subtitle = title, x = "Simulation", y = "Posterior transition rate") 
   
   return(g)
 }
@@ -123,7 +123,7 @@ pB = p5 / p6 + plot_layout(guides = 'collect') &
         legend.title = element_text(size = 10), legend.text = element_text(size = 8))
 
 
-pdf('figures/Figure5.pdf', height = 8, width = 12)#, units = "in", res = 300) 
+pdf('figures/Figure6.pdf', height = 8, width = 12)#, units = "in", res = 300) 
 (pA | pB) + plot_layout(widths = c(2, 1))
 dev.off()
 

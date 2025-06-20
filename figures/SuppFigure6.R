@@ -41,15 +41,15 @@ inf_params_labels = c("birthRate.t0" = "birth rate (type 0)", "birthRate.t1" = "
                       "birthRate.t2" = "birth rate (type 2)", "birthRate.t3" = "birth rate (type 3)",
                       "deathRate.t0" = "death rate (type 0)", "deathRate.t1" = "death rate (type 1)", 
                       "deathRate.t2" = "death rate (type 2)", "deathRate.t3" = "death rate (type 3)",
-                      "migrationRate.t1" = "migration rate (to type 1)", 
-                      "migrationRate.t2" = "migration rate (to type 2)",
-                      "migrationRate.t3" = "migration rate (to type 3)",
+                      "migrationRate.t1" = "transition rate (to type 1)", 
+                      "migrationRate.t2" = "transition rate (to type 2)",
+                      "migrationRate.t3" = "transition rate (to type 3)",
                       "editRate" = "editing rate", "treeHeight" = "tree height", "treeLength" = "tree length")
 
 params = c('birthRate', 'deathRate', 'migrationRate', 'editRate', 'treeHeight', 'treeLength')
 params_labels = c('birthRate' = 'birth rate', 
                   'deathRate' = 'death rate', 
-                  'migrationRate' = 'migration rate', 
+                  'migrationRate' = 'transition rate', 
                   'editRate' = 'editing rate', 
                   'treeHeight' = 'tree height', 
                   'treeLength' = 'tree length')
