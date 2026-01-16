@@ -11,30 +11,31 @@
   </parameter>
 
   <!-- editing rate -->
-  <parameter id="editRate" spec="beast.base.inference.parameter.RealParameter" value="$(editRate)"/>
+  <parameter id="editRate" spec="beast.base.inference.parameter.RealParameter" value="0.05"/>
 
   <!-- editing window -->
-  <parameter id="scarringHeight" spec="beast.base.inference.parameter.RealParameter" value="$(scarringHeight)"/>
-  <parameter id="scarringDuration" spec="beast.base.inference.parameter.RealParameter" value="$(scarringDuration)"/>
+  <parameter id="scarringHeight" spec="beast.base.inference.parameter.RealParameter" value="40"/>
+  <parameter id="scarringDuration" spec="beast.base.inference.parameter.RealParameter" value="40"/>
 
   <!-- simulated tree -->
-  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="$(treeDir)/$(tree)_$(seed).newick"
+  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="$(treeFile)"
     IsLabelledNewick="true" adjustTipHeights="false"/>
 
   <run spec="feast.simulation.GPSimulator" nSims="1">
 
     <!-- Simulate alignment -->
     <simulationObject id="seqAlign" spec="tidetree.simulation.SimulatedAlignment"
-      outputFileName="$(outFile)" sequenceLength="$(nTargets)" tree="@simulatedTree" origin="40">
+      outputFileName="$(outFile)" sequenceLength="20" tree="@simulatedTree" origin="40">
 
       <!-- 50 states (unedited + edited (50 scars) + silenced) -->
       <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="52"/>
 
-      <!-- TiDeTree substitution model -->
+      <!-- TiDeTree substitution model for missing data -->
+      <!-- Here, silencing rate is a scaler of editing rate!  -->
       <siteModel spec="beast.base.evolution.sitemodel.SiteModel">
         <mutationRate idref="editRate"/>
         <substModel id="scarringModel" spec="tidetree.substitutionmodel.EditAndSilencingModel"
-          editRates="@scarringProbs" silencingRate="0"
+          editRates="@scarringProbs" silencingRate="0.2" missingProbability="0.2"
           editHeight="@scarringHeight" editDuration="@scarringDuration">
           <frequencies id="freq" spec="beast.base.evolution.substitutionmodel.Frequencies" frequencies="1.0 0 0" estimate="false"/>
         </substModel>
@@ -46,5 +47,3 @@
 
   </run>
 </beast>
-
-<!-- if problems occur, set fileName in simulatedTree explicitly (e.g. "Trees/tree_sds_4.newick"), and use e.g. seed 1 for simulation -->

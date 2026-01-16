@@ -1,0 +1,23 @@
+<beast version="2.0" namespace="beast.base.inference:beast.base.inference.parameter:remaster">
+  <run spec="Simulator" nSims="20">
+    <simulate spec="SimulatedTree" id="tree">
+      <trajectory spec="StochasticTrajectory" id="trajectory" maxTime="40" mustHave="S&gt;199 &amp;&amp; S&lt;2001"> <!-- number of samples in [200, 3000] -->
+        <population spec="RealParameter" id="X" value="1"/>
+        <samplePopulation spec="RealParameter" id="S" value="0"/>
+          
+        <reaction spec="Reaction" rate="0.27"> X -> 2X </reaction> <!-- birth -->
+        <reaction spec="Reaction" rate="0.035"> X -> 0 </reaction> <!-- death -->
+        <reaction spec="PunctualReaction" p="0.1" times="40"> X -> S </reaction> <!-- extant sampling -->
+      </trajectory>
+    </simulate>
+        
+    <logger fileName="trees_bd.trees" mode="tree">
+      <log spec="TypedTreeLogger" noLabels="true" tree="@tree"/>
+    </logger>
+    
+  </run>
+</beast>
+
+<!-- run in BEAST2 app, seed 1 
+"Trajectory acceptance condition not met: S>199 && S<2001" - simulation rejected 13 times
+Versions: remaster v2.7.2 feast v10.3.1 BEAST.base v2.7.7 BEAST.app v2.7.7 -->

@@ -1,5 +1,5 @@
 # ----------
-# Functions for analysis_log.R script
+# Functions for analysis
 # ----------
 
 get_ntaxa = function(alignment_file) {
@@ -18,7 +18,7 @@ get_ntaxa = function(alignment_file) {
 }
 
 
-load_alignment = function(alignment_file) {
+load_alignment = function(alignment_file, num = T) {
   "Load simulated alignment from .nexus file 
   Create a data frame with rows - cells, columns - targets, values - edits"
   
@@ -30,8 +30,10 @@ load_alignment = function(alignment_file) {
   data[nrow(data), ncol(data)] = str_replace(data[nrow(data), ncol(data)], ";", "") # remove ; in last cell
   rownames(data) = str_extract(sapply(str_split(data$V1, pattern = " "), "[", 1), "[0-9]+") # use cell labels as row names
   data$V1 = sapply(str_split(data$V1, pattern = " "), "[", 2) # remove cell labels from first column
-  data$V1 = as.numeric(data$V1)
-  data[, ncol(data)] = as.numeric(data[, ncol(data)])
+  if (num) { # convert to numeric
+    data$V1 = as.numeric(data$V1)
+    data[, ncol(data)] = as.numeric(data[, ncol(data)])
+  }
   
   # sort according to cell labels
   data = data[order(as.numeric(rownames(data))), ] 
@@ -39,11 +41,11 @@ load_alignment = function(alignment_file) {
 }
 
 
-load_tapes = function(tape_files) {
+load_tapes = function(tape_files, num = T) {
   "Combine tapes from .nexus files to alignment"
   
   # load tapes
-  data = sapply(tape_files, load_alignment, simplify = F)
+  data = sapply(tape_files, load_alignment, num = num, simplify = F)
   names(data) = str_extract(str_extract(names(data), "alignment_[0-9]+"), "[0-9]+")
   data = data[order(as.numeric(names(data)))]
   

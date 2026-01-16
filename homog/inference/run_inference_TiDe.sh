@@ -21,14 +21,22 @@ if [[ "tree_s tree_sd" =~ ${tree} ]]
 then
   rho=1
 else
-  rho=0.1
+  rho=0.1 # or 0.01 in case of lower sampling
 fi
 
 # run inference
 echo "seed=${seed}, tree=${tree}, rho=${rho}" > ${outDir}/${tree}_${seed}.inference.out
 
-java -jar $HOME/beasts2.7.jar -statefile ${outDir}/${tree}_${seed}.inference.xml.state -overwrite \
--seed ${seed} -D "tree=${tree},rho=${rho},inDir=${inDir},outDir=${outDir},scarringHeight=${scarringHeight},scarringDuration=${scarringDuration}" \
+java -Dglass.platform=Monocle -Dmonocle.platform=Headless --module-path=$HOME/javafx-sdk-17.0.6-linux-monocle/lib --add-modules=javafx.base,javafx.fxml \
+-jar $HOME/beast_runs/simbundle.jar \
+-version_file $HOME/beast_runs/version_files/sciphy_version.xml \
+-version_file $HOME/beast_runs/version_files/tidetree-dropout_version.xml \
+-version_file $HOME/beast_runs/version_files/feast_version.xml \
+-version_file $HOME/beast_runs/version_files/beast_version.xml \
+-statefile ${outDir}/${tree}_${seed}.inference.state \
+-overwrite \
+-seed ${seed} \
+-D "tree=${tree},rho=${rho},inDir=${inDir},outDir=${outDir},scarringHeight=${scarringHeight},scarringDuration=${scarringDuration}" \
 ${xmlFile} >> ${outDir}/${tree}_${seed}.inference.out
 
-# Note: make sure that Java is installed/ module is loaded, and the location of beasts2.7.jar is correct
+# Note: make sure that Java is installed/ module is loaded, and the location of.jar is correct

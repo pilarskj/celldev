@@ -17,7 +17,7 @@
   <parameter id="editRate" spec="beast.base.inference.parameter.RealParameter" value="$(editRate)"/>
 
   <!-- simulated tree -->
-  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="Trees/$(tree)_$(seed).newick"
+  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="$(treeDir)/$(tree)_$(seed).newick"
     IsLabelledNewick="true" adjustTipHeights="false"/>
 
 
@@ -27,17 +27,18 @@
     <plate var="n" range="1:$(nTapes)">
 
       <!-- Simulate alignment -->
-      <simulationObject id="seqAlign.$(n)" spec="typewriter.evolution.simulation.SimulatedTypeWriterAlignment"
+      <simulationObject id="seqAlign.$(n)" spec="sciphy.evolution.simulation.SimulatedSciPhyAlignment"
         outputFileName="$(outDir)/$(tree)_$(seed).alignment_$(n).nexus"
-        numberOfTargets="1" nrOfInsertionsPerTarget="$(tapeLength)"
-        tree="@simulatedTree" origin="40" >
+        numberOfTargets="1" arrayLength="$(tapeLength)" 
+        tree="@simulatedTree" origin="40"> <!-- previously typewriter.evolution.simulation.SimulatedTypeWriterAlignment, nrOfInsertionsPerTarget -->
+        <!-- alternatively: .SimulatedSciPhyAlignmentHeritableMissingBcodes, missingRate="?" missingProbability="?" -->
 
-        <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/> <!-- sequential: 51-->
-
+        <userDataType spec="beast.base.evolution.datatype.IntegerData"/> <!-- previously tidetree.evolution.datatype.EditData nrOfStates="14" or "51" -->
+        
         <!-- SciPhy substitution model -->
         <siteModel spec="beast.base.evolution.sitemodel.SiteModel">
           <mutationRate idref="editRate"/>
-          <substModel spec="typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel" editProbabilities="@insertProbs">
+          <substModel spec="sciphy.evolution.substitutionmodel.SciPhySubstitutionModel" editProbabilities="@insertProbs"> <!-- previously typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel -->
               <frequencies spec="beast.base.evolution.substitutionmodel.Frequencies"
                 frequencies="1.0 0 0 0 0 0 0 0 0 0 0 0 0 0" estimate="false"/>
                 <!-- sequential: 1.0 0 0 0 0 0 0 0 0 0 0

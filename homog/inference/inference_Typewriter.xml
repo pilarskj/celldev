@@ -14,8 +14,8 @@
 
 <!-- alignments -->
 <plate var="n" range="1:$(nTapes)">
-  <data  id="alignment.$(n)" spec="feast.fileio.AlignmentFromNexus" name="alignment" fileName="$(inDir)/$(tree)_$(seed).alignment_$(n).nexus">
-    <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/> <!-- sequential: 52 -->
+  <data  id="alignment.$(n)" spec="sciphy.util.AlignmentFromNexus" name="alignment" fileName="$(inDir)/$(tree)_$(seed).alignment_$(n).nexus">
+    <userDataType spec="beast.base.evolution.datatype.IntegerData"/>
     </data>
 </plate>
 
@@ -26,7 +26,7 @@
 
 <!-- specify tip dates -->
 <traitSet id="dateTrait" spec="beast.base.evolution.tree.TraitSet"
-  taxa="@taxonSet" traitname="date-forward" value="0=40"/>
+  taxa="@taxonSet" traitname="date-forward" value="$(taxLabel)=40"/> <!-- 0=40 -->
 
 
 <!-- run MCMC -->
@@ -38,11 +38,11 @@
   <state id="state" spec="beast.base.inference.State" storeEvery="5000">
 
     <!-- build starting tree -->
-    <stateNode id="tree" spec="typewriter.evolution.tree.startingTree"
+    <stateNode id="tree" spec="sciphy.evolution.tree.startingTree"
       rootHeight="40" taxa="@alignment.1" scarringHeight="30" scarringDuration="20" sequencesAreClustered="false">
       <taxonset idref="taxonSet"/>
       <trait idref="dateTrait"/>
-    </stateNode>
+    </stateNode> <!-- previously typewriter.evolution.tree.startingTree -->
 
     <!-- editing model parameters -->
     <parameter id="insertProbs" spec="beast.base.inference.parameter.RealParameter"
@@ -83,15 +83,15 @@
   </state>
 
   <!-- for initialization repeats -->
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@birthRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@birthRate">
       <Uniform name="distr" lower="0.05" upper="0.5"/>
   </init>
 
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@deathRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@deathRate">
       <Uniform name="distr" lower="0" upper="0.1"/>
   </init>
 
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@editRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@editRate">
       <Uniform name="distr" lower="0" upper="0.25"/> <!-- sequential: upper="1.0" -->
   </init>
 
@@ -104,8 +104,8 @@
 
       <!-- tree prior -->
       <distribution id="birthDeathSamplingModel" spec="bdsky.evolution.speciation.BirthDeathSkylineModel"
-        conditionOnSurvival="True" tree="@tree" origin="@origin" contemp="true"
-        birthRate="@birthRate" deathRate="@deathRate" rho="@rho" samplingRate="@samplingRate" >
+        conditionOnSurvival="true" tree="@tree" origin="@origin" contemp="true"
+        birthRate="@birthRate" deathRate="@deathRate" rho="@rho" samplingRate="@samplingRate">
       </distribution>
 
       <!-- prior on substitution model parameters -->
@@ -125,14 +125,14 @@
     <distribution id="likelihood" spec="beast.base.inference.CompoundDistribution" useThreads='true'>
 
       <plate var="n" range="1:$(nTapes)">
-        <distribution id="treeLikelihood.$(n)" spec="typewriter.evolution.likelihood.TypewriterTreeLikelihood"
-          data="@alignment.$(n)" tree="@tree" useScaling="true" arrayLength="$(tapeLength)" origin="@origin">
+        <distribution id="treeLikelihood.$(n)" spec="sciphy.evolution.likelihood.SciPhyTreeLikelihood"
+          data="@alignment.$(n)" tree="@tree" useScaling="true" arrayLength="$(tapeLength)" origin="@origin"> <!-- previously typewriter.evolution.likelihood.Typewriter -->
 
           <!-- Typewriter substitution model -->
           <siteModel spec="beast.base.evolution.sitemodel.SiteModel">
             <mutationRate idref="editRate"/>
-            <substModel spec="typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel"
-              editProbabilities="@insertProbs">
+            <substModel spec="sciphy.evolution.substitutionmodel.SciPhySubstitutionModel"
+              editProbabilities="@insertProbs"> <!-- previously typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel -->
               <frequencies spec="beast.base.evolution.substitutionmodel.Frequencies"
                 frequencies="1.0 0 0 0 0 0 0 0 0 0 0 0 0 0" estimate="false"/>
                 <!-- sequential: 1.0 0 0 0 0 0 0 0 0 0 0
@@ -150,19 +150,19 @@
   </distribution>
 
 
-  <!-- 3. define operators-->
-  <!-- tree operators -->
+  <!-- 3. define operators
+  tree operators
   <operator spec="beast.base.evolution.operator.WilsonBalding" tree="@tree" weight="30.0"/>
   <operator spec="beast.base.evolution.operator.Uniform" tree="@tree" weight="30.0"/>
   <operator spec="beast.base.evolution.operator.SubtreeSlide" tree="@tree" weight="3.0"/>
   <operator spec="beast.base.evolution.operator.Exchange" isNarrow="false" tree="@tree" weight="30.0"/>
   <operator spec="beast.base.evolution.operator.ScaleOperator" rootOnly="true" tree="@tree" weight="3.0"/>
 
-  <!-- substitution model operators -->
+  substitution model operators
   <operator id="editRateScaler" spec="feast.operators.SmartScaleOperator"
     parameter="@editRate" scaleFactor="0.8" weight="3.0"/>
 
-  <!-- phylodynamic operators -->
+  phylodynamic operators
   <operator id="birthRateScaler" spec="feast.operators.SmartScaleOperator"
     parameter="@birthRate" scaleFactor="0.8" weight="3.0"/>
   <operator id="deathRateScaler" spec="feast.operators.SmartScaleOperator"
@@ -174,6 +174,40 @@
   </operator>
 
   <operator id="upBD" spec="beast.base.inference.operator.UpDownOperator" scaleFactor="0.8" weight="10.0">
+    <up idref="birthRate"/>
+    <up idref="deathRate"/>
+  </operator> --> <!-- INEFFICIENT FOR LARGE TREES -->
+  
+  
+  <!-- 3. define operators - MODIFIED WEIGHTS + BACTRIAN -->
+  <!-- tree operators -->
+  <operator spec="beast.base.evolution.operator.WilsonBalding" tree="@tree" weight="10.0"/>
+  <operator spec="beast.base.evolution.operator.Uniform" tree="@tree" weight="10.0"/>
+  <operator spec="beast.base.evolution.operator.SubtreeSlide" tree="@tree" weight="10.0"/>
+  <operator spec="beast.base.evolution.operator.Exchange" isNarrow="true" tree="@tree" weight="10.0"/>
+  <operator spec="beast.base.evolution.operator.ScaleOperator" tree="@tree" weight="1.0"/> 
+  
+  <operator id="updownTreeClock" spec="beast.base.inference.operator.UpDownOperator" scaleFactor="0.8" weight="1.0">
+    <up idref="editRate"/>
+    <down idref="tree"/>
+  </operator>
+
+  <!-- substitution model operators -->
+  <operator id="editRateScaler" spec="beast.base.evolution.operator.ScaleOperator"
+    parameter="@editRate" scaleFactor="0.8" weight="3.0"/>
+
+  <!-- phylodynamic operators -->
+  <operator id="birthRateScaler" spec="beast.base.evolution.operator.ScaleOperator"
+    parameter="@birthRate" scaleFactor="0.8" weight="3.0"/>
+  <operator id="deathRateScaler" spec="beast.base.evolution.operator.ScaleOperator"
+    parameter="@deathRate" scaleFactor="0.8" weight="3.0"/>
+
+  <operator id="updownBD" spec="beast.base.inference.operator.UpDownOperator" scaleFactor="0.8" weight="3.0">
+    <up idref="birthRate"/>
+    <down idref="deathRate"/>
+  </operator>
+
+  <operator id="upupBD" spec="beast.base.inference.operator.UpDownOperator" scaleFactor="0.8" weight="3.0">
     <up idref="birthRate"/>
     <up idref="deathRate"/>
   </operator>
@@ -199,7 +233,7 @@
   </logger>
 
   <!-- screen logger -->
-  <logger id="screenlog" spec="beast.base.inference.Logger" logEvery="1000">
+  <logger id="screenlog" spec="beast.base.inference.Logger" logEvery="5000">
     <log idref="posterior"/>
     <log id="ESS" spec="beast.base.inference.util.ESS" arg="@posterior"/>
     <log idref="likelihood"/>
