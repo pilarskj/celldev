@@ -2,9 +2,9 @@
 
   <!-- ALIGNMENT -->
   <plate var="n" range="1:20">
-    <data  id="alignment.$(n)" spec="feast.fileio.AlignmentFromNexus" name="alignment"
-      fileName="Typewriter/$(prototype)/simulationOutput/tree_$(seed).alignment_$(n).nexus">
-      <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/>
+    <data  id="alignment.$(n)" spec="sciphy.util.AlignmentFromNexus" name="alignment"
+      fileName="$(dir)/Typewriter/$(prototype)/simulationOutput/tree_$(seed).alignment_$(n).nexus">
+      <userDataType spec="beast.base.evolution.datatype.IntegerData"/>
     </data>
   </plate>
 
@@ -18,7 +18,7 @@
     taxa="@taxonSet" traitname="date-forward" value="0=40"/>
 
   <!-- specify tip types -->
-  <traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="Trees/$(prototype)/tree_$(seed).types.csv" sep=","
+  <traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="$(dir)/Trees/$(prototype)/tree_$(seed).types.csv" sep=","
     taxa="@taxonSet" traitname="type"/>
 
 
@@ -27,7 +27,7 @@
     lower="40.0" name="stateNode" upper="40.001" value="40.001"/>
 
   <distribution id="birthDeathMigration" spec="bdmmprime.distribution.BirthDeathMigrationDistribution"
-    conditionOnSurvival="True" frequencies="1 0 0 0" tree="@tree"
+    conditionOnSurvival="true" frequencies="1 0 0 0" tree="@tree"
     typeTraitSet="@typeTrait" storeNodeTypes="true">
 
     <parameterization spec="bdmmprime.parameterization.CanonicalParameterization"
@@ -57,7 +57,7 @@
   <run spec="LogFileIterator">
 
     <!-- Get parameters from log -->
-    <logFileState spec="TraceLogFileState" logFileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.log">
+    <logFileState spec="TraceLogFileState" logFileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.log">
 
       <!-- Birth rates -->
       <logFileEntry spec="LogFileRealParameter" fieldName="birthRate.1" fieldParameterIndex="0">
@@ -132,12 +132,12 @@
     </logFileState>
 
     <!-- Get tree log to map types on trees -->
-    <logFileState spec="TreeLogFileState" logFileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.trees">
+    <logFileState spec="TreeLogFileState" logFileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.trees">
       <tree id="tree" spec="beast.base.evolution.tree.Tree"/>
     </logFileState>
 
     <!-- Parameter log -->
-    <logger logEvery="10000" fileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).processed.log">
+    <logger logEvery="10000" fileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).processed.log">
       <log idref="birthRate"/>
       <log idref="deathRate"/>
       <log idref="migrationRate"/>
@@ -145,14 +145,14 @@
     </logger>
 
     <!-- Typed tree log -->
-    <logger spec="beast.base.inference.Logger" fileName="Typewriter/$(prototype)/$(prototype)/inferenceOutput/tree_$(seed).typed.trees" logEvery="10000" mode="tree">
+    <logger spec="beast.base.inference.Logger" fileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).typed.trees" logEvery="10000" mode="tree">
       <log id="typeMappedTree" spec="bdmmprime.mapping.TypeMappedTree" bdmmDistrib="@birthDeathMigration"
         frequencies="1 0 0 0" mapOnInit="false" remapOnLog="true" typeLabel="type" typeTraitSet="@typeTrait"
         untypedTree="@tree"/>
     </logger>
 
     <!-- Typed node tree log -->
-    <logger id="nodeTypedTreeLogger" spec="beast.base.inference.Logger" fileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).typed.node.trees" logEvery="10000" mode="tree">
+    <logger id="nodeTypedTreeLogger" spec="beast.base.inference.Logger" fileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).typed.node.trees" logEvery="10000" mode="tree">
       <log id="nodeTypedTree" spec="bdmmprime.mapping.TypedNodeTreeLogger" typedTree="@typeMappedTree"/>
     </logger>
 

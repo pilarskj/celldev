@@ -14,14 +14,14 @@
   <parameter id="editRate" spec="beast.base.inference.parameter.RealParameter" value="0.05"/>
 
   <!-- simulated tree -->
-  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="Trees/hierarchical/tree_$(seed).newick" 
-    IsLabelledNewick="true" adjustTipHeights="false"/> <!-- distinct -->
+  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="$(dir)/Trees/$(trans)/tree_$(seed).newick" 
+    IsLabelledNewick="true" adjustTipHeights="false"/>
 
   <run spec="feast.simulation.GPSimulator" nSims="1">
 
     <!-- Simulate alignment -->
     <simulationObject id="seqAlign" spec="tidetree.simulation.SimulatedAlignment"
-      outputFileName="TiDe/hierarchical/simulationOutput/tree_$(seed).alignment.nexus" sequenceLength="20" tree="@simulatedTree" origin="40" > <!-- distinct -->
+      outputFileName="$(dir)/TiDe/$(trans)/simulationOutput/tree_$(seed).alignment.nexus" sequenceLength="20" tree="@simulatedTree" origin="40">
 
       <!-- 50 states (unedited + edited (50 scars) + silenced) -->
       <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="52"/>

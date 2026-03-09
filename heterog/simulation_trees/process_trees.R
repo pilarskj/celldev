@@ -8,9 +8,9 @@ library(stringr)
 library(ape)
 
 # set path to repo as working directory
-# setwd("~/Projects/celldev")
+setwd("~/Projects/celldev")
 
-tree_dir = '~/Projects/celldev_data/Trees'
+tree_dir = '~/Projects/celldev_data/heterog/Trees'
 if (!dir.exists(tree_dir)) {dir.create(tree_dir)}
 
 # specify prototype and number of simulations performed

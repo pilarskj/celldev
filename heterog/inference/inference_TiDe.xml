@@ -14,8 +14,8 @@
 
 
 <!-- input data -->
-<data  id="alignment" spec="feast.fileio.AlignmentFromNexus"
-  name="alignment" fileName="TiDe/$(prototype)/simulationOutput/tree_$(seed).alignment.nexus">
+<data  id="alignment" spec="tidetree.util.AlignmentFromNexus"
+  name="alignment" fileName="$(dir)/TiDe/$(prototype)/simulationOutput/tree_$(seed).alignment.nexus">
   <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="52"/>
 </data>
 
@@ -29,7 +29,7 @@
   taxa="@taxonSet" traitname="date-forward" value="0=40"/>
 
 <!-- specify tip types -->
-<traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="Trees/$(prototype)/tree_$(seed).types.csv" sep=","
+<traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="$(dir)/Trees/$(prototype)/tree_$(seed).types.csv" sep=","
   taxa="@taxonSet" traitname="type"/>
 
 
@@ -64,12 +64,6 @@
     <parameter id="editRate" spec="beast.base.inference.parameter.RealParameter"
       dimension="1" lower="0.0" name="stateNode" upper="10" value="0.01"/>
 
-    <!--<parameter id="scarringHeight" spec="beast.base.inference.parameter.RealParameter"
-      dimension="1" lower="0.0" name="stateNode" upper="100" value="40"/>
-
-    <parameter id="scarringDuration" spec="beast.base.inference.parameter.RealParameter"
-      dimension="1" lower="0.0" name="stateNode" upper="100" value="40"/> -->
-
     <!-- population process parameters -->
     <parameter id="birthRate" spec="beast.base.inference.parameter.RealParameter"
       dimension="1" lower="0.0" name="stateNode" upper="Infinity" value="0.5 0.5 0.5 0.5"/>
@@ -103,27 +97,18 @@
 
 
   <!-- for initialization repeats -->
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@birthRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@birthRate">
       <Uniform name="distr" lower="0.05" upper="0.5"/>
   </init>
 
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@deathRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@deathRate">
       <Uniform name="distr" lower="0" upper="0.1"/>
   </init>
 
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@editRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@editRate">
       <Uniform name="distr" lower="0" upper="0.25"/>
   </init>
-
-  <!--<init spec="feast.parameter.InitRandomRealParameter" initial="@scarringHeight">
-      <Uniform name="distr" lower="20" upper="40"/>
-  </init>
-
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@scarringDuration">
-      <Uniform name="distr" lower="20" upper="40"/>
-  </init> -->
-
-
+  
 
   <!-- 2. define distributions -->
   <distribution id="posterior" spec="beast.base.inference.CompoundDistribution">
@@ -133,7 +118,7 @@
 
       <!-- tree prior -->
       <distribution id="birthDeathMigration" spec="bdmmprime.distribution.BirthDeathMigrationDistribution"
-        conditionOnSurvival="True" frequencies="1.0 0 0 0" tree="@tree"
+        conditionOnSurvival="true" frequencies="1.0 0 0 0" tree="@tree"
         typeTraitSet="@typeTrait" storeNodeTypes="true">
 
         <parameterization spec="bdmmprime.parameterization.CanonicalParameterization"
@@ -248,7 +233,7 @@
 
   <!-- 4. define loggers -->
   <!-- trace logger -->
-  <logger id="tracelog" spec="beast.base.inference.Logger" fileName="TiDe/$(prototype)/inferenceOutput/tree_$(seed).inference.log" logEvery="5000">
+  <logger id="tracelog" spec="beast.base.inference.Logger" fileName="$(dir)/TiDe/$(prototype)/inferenceOutput/tree_$(seed).inference.log" logEvery="5000">
     <log idref="posterior"/>
     <log idref="likelihood"/>
     <log idref="prior"/>
@@ -265,7 +250,7 @@
   </logger>
 
   <!-- screen logger -->
-  <logger id="screenlog" spec="beast.base.inference.Logger" logEvery="1000">
+  <logger id="screenlog" spec="beast.base.inference.Logger" logEvery="5000">
     <log idref="posterior"/>
     <log id="ESS" spec="beast.base.inference.util.ESS" arg="@posterior"/>
     <log idref="likelihood"/>
@@ -273,7 +258,7 @@
   </logger>
 
   <!-- tree logger -->
-  <logger id="treelog" spec="beast.base.inference.Logger" fileName="TiDe/$(prototype)/inferenceOutput/tree_$(seed).inference.trees" logEvery="5000" mode="tree">
+  <logger id="treelog" spec="beast.base.inference.Logger" fileName="$(dir)/TiDe/$(prototype)/inferenceOutput/tree_$(seed).inference.trees" logEvery="5000" mode="tree">
     <log idref="tree" printMetaData="true"/>
   </logger>
 

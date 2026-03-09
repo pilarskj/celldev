@@ -9,8 +9,8 @@
   <parameter id="editRate" spec="beast.base.inference.parameter.RealParameter" value="0.05"/>
 
   <!-- simulated tree -->
-  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="Trees/hierarchical/tree_$(seed).newick" 
-    IsLabelledNewick="true" adjustTipHeights="false"/> <!-- distinct -->
+  <tree id="simulatedTree" spec="feast.fileio.TreeFromNewickFile" fileName="$(dir)/Trees/$(trans)/tree_$(seed).newick" 
+    IsLabelledNewick="true" adjustTipHeights="false"/>
 
   <run spec="feast.simulation.GPSimulator" nSims="1">
 
@@ -18,17 +18,18 @@
     <plate var="n" range="1:20">
 
       <!-- Simulate alignment -->
-      <simulationObject id="seqAlign.$(n)" spec="typewriter.evolution.simulation.SimulatedTypeWriterAlignment"
-        outputFileName="Typewriter/hierarchical/simulationOutput/tree_$(seed).alignment_$(n).nexus"
-        numberOfTargets="1" nrOfInsertionsPerTarget="5"
-        tree="@simulatedTree" origin="40" > <!-- distinct -->
+      <simulationObject id="seqAlign.$(n)" spec="sciphy.evolution.simulation.SimulatedSciPhyAlignment"
+        outputFileName="$(dir)/Typewriter/$(trans)/simulationOutput/tree_$(seed).alignment_$(n).nexus"
+        numberOfTargets="1" arrayLength="5"
+        tree="@simulatedTree" origin="40">
+        <!-- previously typewriter.evolution.simulation.SimulatedTypeWriterAlignment, nrOfInsertionsPerTarget -->
 
-        <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/>
+        <userDataType spec="beast.base.evolution.datatype.IntegerData"/> <!-- previously tidetree.evolution.datatype.EditData nrOfStates="14" -->
 
         <!-- Typewriter substitution model -->
         <siteModel spec="beast.base.evolution.sitemodel.SiteModel">
           <mutationRate idref="editRate"/>
-          <substModel spec="typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel" editProbabilities="@insertProbs">
+          <substModel spec="sciphy.evolution.substitutionmodel.SciPhySubstitutionModel" editProbabilities="@insertProbs"> <!-- previously typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel -->
               <frequencies spec="beast.base.evolution.substitutionmodel.Frequencies"
                 frequencies="1.0 0 0 0 0 0 0 0 0 0 0 0 0 0" estimate="false"/>
           </substModel>

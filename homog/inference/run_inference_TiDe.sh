@@ -28,11 +28,12 @@ fi
 echo "seed=${seed}, tree=${tree}, rho=${rho}" > ${outDir}/${tree}_${seed}.inference.out
 
 java -Dglass.platform=Monocle -Dmonocle.platform=Headless --module-path=$HOME/javafx-sdk-17.0.6-linux-monocle/lib --add-modules=javafx.base,javafx.fxml \
--jar $HOME/beast_runs/simbundle.jar \
--version_file $HOME/beast_runs/version_files/sciphy_version.xml \
--version_file $HOME/beast_runs/version_files/tidetree-dropout_version.xml \
--version_file $HOME/beast_runs/version_files/feast_version.xml \
--version_file $HOME/beast_runs/version_files/beast_version.xml \
+-jar software/simbundle.jar \
+-version_file software/beast2_version.xml \
+-version_file software/feast_version.xml \
+-version_file software/tidetree_version.xml \
+-version_file software/sciphy_version.xml \
+-version_file software/bdsky_version.xml \
 -statefile ${outDir}/${tree}_${seed}.inference.state \
 -overwrite \
 -seed ${seed} \

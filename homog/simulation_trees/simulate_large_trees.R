@@ -8,15 +8,18 @@ library(stringr)
 library(dplyr)
 library(treeio) # for loading .trees file
 
+code_dir = "~/Projects/celldev"
+data_dir = "~/Projects/celldev_data/homog"
+
 # set path to repo as working directory
-setwd("~/Projects/celldev")
+setwd(code_dir)
 
 # load functions
 source("homog/simulation_trees/tree_functions.R")
 
 # specify output paths
-params_f = 'homog/simulation_trees/large_tree_params.csv'
-tree_dir = '~/Projects/celldev_data/homog/LargeTrees'
+tree_dir = paste0(data_dir, '/LargeTrees')
+params_f = paste0(tree_dir, '/tree_params.csv')
 if (!dir.exists(tree_dir)) {dir.create(tree_dir)}
 
 # specify parameters
@@ -152,7 +155,7 @@ treeParams = bind_rows(treeParams)
 write.csv(treeParams, file = params_f, quote = F, row.names = F)
 
 # # view stats
-# treeParams = read.csv("~/Projects/celldev/homog/simulation_trees/large_tree_params.csv")
+# treeParams = read.csv(params_f)
 # treeParams %>% 
 #   mutate(treeModel = str_extract(tree, "tree_[a-z]+")) %>%
 #   group_by(treeModel) %>% 
@@ -193,7 +196,7 @@ summary(sampledTreeParams$nCells)
 # 33.00   80.00   82.00   88.38  103.25  145.00 
 
 # compare to previous trees (on average somewhat smaller)
-test = read.csv("~/Projects/celldev/homog/simulation_trees/tree_params.csv")
+test = read.csv(paste0(data_dir, "/Trees/tree_params.csv"))
 test = test %>% 
   mutate(treeModel = str_extract(tree, "tree_[a-z]+")) %>%
   filter(treeModel %in% c("tree_ss", "tree_sds", "tree_bd"))
@@ -202,8 +205,8 @@ summary(test$nCells)
 # 25.00   82.00  102.00   99.28  123.25  180.00 
 
 # save trees and parameters
-sampled_params_f = 'homog/simulation_trees/sampled_tree_params.csv'
-sampled_tree_dir = '~/Projects/celldev_data/homog/SampledTrees'
+sampled_tree_dir = paste0(data_dir, '/SampledTrees')
+sampled_params_f = paste0(sampled_tree_dir, '/tree_params.csv')
 if (!dir.exists(tree_dir)) {dir.create(tree_dir)}
 
 lapply(c(1:length(sampledTrees)), function(i) {

@@ -1,13 +1,4 @@
 .DS_Store
 .Rhistory
-*.jar
-*.newick
-*.nexus
-*.otf
-*.Rdat
-*.tree
-*.trees
-*.types.csv
-*.log
-*.gz
-*.svg
+other
+*.pdf

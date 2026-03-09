@@ -15,9 +15,9 @@
 
 <!-- input data -->
 <plate var="n" range="1:20">
-  <data  id="alignment.$(n)" spec="feast.fileio.AlignmentFromNexus" name="alignment"
-    fileName="Typewriter/$(prototype)/simulationOutput/tree_$(seed).alignment_$(n).nexus">
-    <userDataType spec="tidetree.evolution.datatype.EditData" nrOfStates="14"/>
+  <data  id="alignment.$(n)" spec="sciphy.util.AlignmentFromNexus" name="alignment"
+    fileName="$(dir)/Typewriter/$(prototype)/simulationOutput/tree_$(seed).alignment_$(n).nexus">
+    <userDataType spec="beast.base.evolution.datatype.IntegerData"/>
   </data>
 </plate>
 
@@ -31,7 +31,7 @@
   taxa="@taxonSet" traitname="date-forward" value="0=40"/>
 
 <!-- specify tip types -->
-<traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="Trees/$(prototype)/tree_$(seed).types.csv" sep=","
+<traitSet id="typeTrait" spec="feast.fileio.TraitSetFromXSV" fileName="$(dir)/Trees/$(prototype)/tree_$(seed).types.csv" sep=","
   taxa="@taxonSet" traitname="type"/>
 
 
@@ -44,7 +44,7 @@
   <state id="state" spec="beast.base.inference.State" storeEvery="5000">
 
     <!-- build starting tree -->
-    <stateNode id="tree" spec="typewriter.evolution.tree.startingTree"
+    <stateNode id="tree" spec="sciphy.evolution.tree.startingTree"
       rootHeight="40" taxa="@alignment.1" scarringHeight="30" scarringDuration="20" sequencesAreClustered="false">
       <taxonset idref="taxonSet"/>
       <trait idref="dateTrait"/>
@@ -92,15 +92,15 @@
 
 
   <!-- for initialization repeats -->
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@birthRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@birthRate">
       <Uniform name="distr" lower="0.05" upper="0.5"/>
   </init>
 
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@deathRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@deathRate">
       <Uniform name="distr" lower="0" upper="0.1"/>
   </init>
 
-  <init spec="feast.parameter.InitRandomRealParameter" initial="@editRate">
+  <init spec="feast.parameter.RandomRealParameter" initial="@editRate">
       <Uniform name="distr" lower="0" upper="0.25"/>
   </init>
 
@@ -113,7 +113,7 @@
 
       <!-- tree prior -->
       <distribution id="birthDeathMigration" spec="bdmmprime.distribution.BirthDeathMigrationDistribution"
-        conditionOnSurvival="True" frequencies="1.0 0 0 0" tree="@tree"
+        conditionOnSurvival="true" frequencies="1.0 0 0 0" tree="@tree"
         typeTraitSet="@typeTrait" storeNodeTypes="true">
 
         <parameterization spec="bdmmprime.parameterization.CanonicalParameterization"
@@ -159,13 +159,13 @@
     <distribution id="likelihood" spec="beast.base.inference.CompoundDistribution" useThreads='true'>
 
       <plate var="n" range="1:20">
-        <distribution id="treeLikelihood.$(n)" spec="typewriter.evolution.likelihood.TypewriterTreeLikelihood"
+        <distribution id="treeLikelihood.$(n)" spec="sciphy.evolution.likelihood.SciPhyTreeLikelihood"
           data="@alignment.$(n)" tree="@tree" useScaling="true" arrayLength="5" origin="@origin">
 
           <!-- Typewriter substitution model -->
           <siteModel spec="beast.base.evolution.sitemodel.SiteModel">
             <mutationRate idref="editRate"/>
-            <substModel spec="typewriter.evolution.substitutionmodel.TypewriterSubstitutionModel"
+            <substModel spec="sciphy.evolution.substitutionmodel.SciPhySubstitutionModel"
               editProbabilities="@insertProbs">
               <frequencies spec="beast.base.evolution.substitutionmodel.Frequencies"
                 frequencies="1.0 0 0 0 0 0 0 0 0 0 0 0 0 0" estimate="false"/>
@@ -228,7 +228,7 @@
 
   <!-- 4. define loggers -->
   <!-- trace logger -->
-  <logger id="tracelog" spec="beast.base.inference.Logger" fileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.log" logEvery="5000">
+  <logger id="tracelog" spec="beast.base.inference.Logger" fileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.log" logEvery="5000">
     <log idref="posterior"/>
     <log idref="likelihood"/>
     <log idref="prior"/>
@@ -247,7 +247,7 @@
   </logger>
 
   <!-- screen logger -->
-  <logger id="screenlog" spec="beast.base.inference.Logger" logEvery="1000">
+  <logger id="screenlog" spec="beast.base.inference.Logger" logEvery="5000">
     <log idref="posterior"/>
     <log id="ESS" spec="beast.base.inference.util.ESS" arg="@posterior"/>
     <log idref="likelihood"/>
@@ -255,7 +255,7 @@
   </logger>
 
   <!-- tree logger -->
-  <logger id="treelog" spec="beast.base.inference.Logger" fileName="Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.trees" logEvery="5000" mode="tree">
+  <logger id="treelog" spec="beast.base.inference.Logger" fileName="$(dir)/Typewriter/$(prototype)/inferenceOutput/tree_$(seed).inference.trees" logEvery="5000" mode="tree">
     <log idref="tree" printMetaData="true"/>
   </logger>
 

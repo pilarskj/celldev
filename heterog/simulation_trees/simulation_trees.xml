@@ -4,7 +4,7 @@
 
     <!-- Simulate tree -->
     <simulationObject id="simulatedTree" spec="bdmmprime.trajectories.simulation.SimulatedTree"
-       minSamples="20" treeFileName="Trees/distinct/tree_$(seed).newick"> <!-- /hierarchical/ -->
+       minSamples="20" treeFileName="$(dir)/Trees/distinct/tree_$(seed).newick"> <!-- /hierarchical/ -->
 
       <parameterization spec="bdmmprime.parameterization.CanonicalParameterization">
 
@@ -27,8 +27,6 @@
                    0   0.06 0
                    0 0   0.04
                    0 0 0     "/>  hierarchical types -->
-
-
         </migrationRate>
 
         <!-- no sampling through time, only at present -->
@@ -47,34 +45,14 @@
     </simulationObject>
 
     <!-- Tree stats log -->
-    <logger spec="beast.base.inference.Logger" logEvery="1" fileName="Trees/distinct/tree_$(seed).log"> <!-- /hierarchical/ -->
+    <logger spec="beast.base.inference.Logger" logEvery="1" fileName="$(dir)/Trees/distinct/tree_$(seed).log"> <!-- /hierarchical/ -->
       <log id="treeStat" spec="beast.base.evolution.tree.TreeStatLogger" tree="@simulatedTree"/>
-    </logger>-->
+    </logger>
 
     <!-- Typed node tree log -->
-    <logger spec="beast.base.inference.Logger" logEvery="1" mode="tree" fileName="Trees/distinct/tree_$(seed).typed.node.trees"> <!-- /hierarchical/ -->
+    <logger spec="beast.base.inference.Logger" logEvery="1" mode="tree" fileName="$(dir)/Trees/distinct/tree_$(seed).typed.node.trees"> <!-- /hierarchical/ -->
       <log id="nodeTypedTree" spec="bdmmprime.mapping.TypedNodeTreeLogger" typedTree="@simulatedTree"/>
     </logger>
 
   </run>
 </beast>
-
-
-<!-- Run bash script:
-#!/bin/bash
-
-# set paths
-code_dir="~/Projects/celldev"
-data_dir="~/Projects/celldev_data"
-
-cd ${data_dir}
-
-# run simulation of trees (adapt the number)
-## make sure that output directories exists and modify the prototype (distinct vs. hierarchical) as needed!
-for seed in `seq 1 20` 
-do
-  java -jar ${code_dir}/bin/beasts2.7.jar -overwrite -seed ${seed} ${code_dir}/heterog/simulation_trees/simulation_trees.xml
-done
--->
-
-

@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# run from ~/Projects/celldev/homog/simulation_barcodes
+# run from ~/Projects/celldev
+dataDir="/Users/jpilarski/Projects/celldev_data/homog"
 
-treeDir="/Users/jpilarski/Projects/celldev_data/homog/LargeTrees"
-outDir="/Users/jpilarski/Projects/celldev_data/homog/Typewriter/baseline_noise/simulationOutputRaw" # or TiDe
+treeDir="$dataDir/LargeTrees"
+outDir="$dataDir/Typewriter/baseline_noise/simulationOutputRaw" # or TiDe
 
 # create directory if not available
 [ -d "$outDir" ] || mkdir -p "$outDir"
+
 
 for tree in tree_{s,ss,sd,sds,bd}
 do
@@ -16,15 +18,15 @@ do
     #outFile="$outDir/${tree}_${seed}.nexus"
     #echo "treeFile=$treeFile,outFile=$outFile"
     echo "treeDir=$treeDir,outDir=$outDir,tree=$tree,seed=$seed"
-    java -jar /Users/jpilarski/simbundle.jar \
-    -version_file /Users/jpilarski/intellij/SciPhy/version.xml \
-    -version_file /Users/jpilarski/intellij/tidetree-dropout/version.xml \
-    -version_file /Users/jpilarski/intellij/feast/version.xml \
-    -version_file /Users/jpilarski/intellij/Beast2/version.xml \
+    java -jar software/simbundle.jar \
+    -version_file software/beast2_version.xml \
+    -version_file software/feast_version.xml \
+    -version_file software/tidetree_version.xml \
+    -version_file software/sciphy_version.xml \
     -overwrite \
     -seed $seed \
     -D "treeDir=$treeDir,outDir=$outDir,tree=$tree,seed=$seed" \
-    simulation_Typewriter_noise.xml # or TiDe
+    homog/simulation_barcodes/simulation_Typewriter_noise.xml # or TiDe
   done
 done
 

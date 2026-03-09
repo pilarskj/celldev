@@ -1,0 +1,18 @@
+<package name="tidetree" version="1.0.0">
+  <depends on="BEAST.base" atleast="2.7.0"/>
+  <depends on="BEAST.app" atleast="2.7.0"/>
+  <depends on="feast" atleast="10.0.0"/>
+
+  <service type="beast.base.core.BEASTInterface">
+    <provider classname="tidetree.evolution.datatype.EditData"/>
+    <provider classname="tidetree.substitutionmodel.EditAndSilencingModel"/>
+    <provider classname="tidetree.tree.StartingTree"/>
+    <provider classname="tidetree.distributions.TreeLikelihoodWithEditWindow"/>
+    <provider classname="tidetree.simulation.SimulatedAlignment"/>
+    <provider classname="tidetree.util.AlignmentFromNexus" />
+  </service>
+
+  <service type="beastfx.app.inputeditor.AlignmentImporter">
+    <provider classname="tidetree.util.NexusImporter"/>
+  </service>
+</package>

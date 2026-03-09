@@ -1,7 +1,7 @@
 <beast version="2.0" namespace="beast.base.inference:beast.base.inference.parameter:remaster">
   <run spec="Simulator" nSims="20">
     <simulate spec="SimulatedTree" id="tree">
-      <trajectory spec="StochasticTrajectory" id="trajectory" maxTime="40" mustHave="S&gt;199 &amp;&amp; S&lt;2001"> <!-- number of samples in [200, 3000] -->
+      <trajectory spec="StochasticTrajectory" id="trajectory" maxTime="40" mustHave="S&gt;199 &amp;&amp; S&lt;2001"> <!-- number of samples in [200, 2000] -->
         <population spec="RealParameter" id="X" value="1"/>
         <samplePopulation spec="RealParameter" id="S" value="0"/>
           

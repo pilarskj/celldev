@@ -7,15 +7,19 @@ library(TreeSim)
 library(stringr)
 library(dplyr)
 
+
+code_dir = "~/Projects/celldev"
+data_dir = "~/Projects/celldev_data/homog"
+
 # set path to repo as working directory
-# setwd("~/Projects/celldev")
+setwd(code_dir)
 
 # load functions
 source("homog/simulation_trees/tree_functions.R")
 
 # specify output paths
-params_f = 'homog/simulation_trees/tree_params.csv'
-tree_dir = '~/Projects/celldev_data/Trees'
+tree_dir = paste0(data_dir, '/Trees')
+params_f = paste0(tree_dir, '/tree_params.csv')
 if (!dir.exists(tree_dir)) {dir.create(tree_dir)}
 
 # specify parameters
