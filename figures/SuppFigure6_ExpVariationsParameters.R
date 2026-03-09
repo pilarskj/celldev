@@ -1,33 +1,8 @@
-# Supplementary Figure 3
+# Parameter inference at varying experimental parameters
 
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(ggplot2)
-library(scales)
-library(showtext)
-library(patchwork)
-
-# plotting options
-palette = c("#E69F00", "#56B4E9", "#009E73","#D55E00", "#CC79A7")
-font_add("lmroman", regular = "~/lmroman10-regular.otf") # Latex font
-showtext_auto()
-theme_set(theme_classic(base_size = 12, base_family = 'lmroman'))
-
-# parameters and labels
-params = c('birthRate', 'deathRate', 'editRate', 'treeHeight', 'treeLength')
-params_labels = c('birthRate' = 'birth rate', 
-                  'deathRate' = 'death rate', 
-                  'editRate' = 'editing rate', 
-                  'treeHeight' = 'tree height', 
-                  'treeLength' = 'tree length')
-
-trees = c("tree_s", "tree_ss", "tree_sd", "tree_sds", "tree_bd")
-tree_labels = c("tree_s" = "synchronous trees",
-                "tree_ss" = "synchronous trees with sampling",
-                "tree_sd" = "synchronous trees with cell death",
-                "tree_sds" = "synchronous trees with cell death and sampling",
-                "tree_bd" = "birth-death trees with sampling")
+setwd("~/Projects/celldev/figures")
+source("homog_functions.R")
+theme_update(axis.text.x = element_text(size = 8), axis.text.y = element_text(size = 8))
 
 settings_td = data.frame(
   setting = c('baseline', 'editRate_0.01', 'editRate_0.15', 'nTargets_5', 'nTargets_40', 'scarringDuration_20', 'scarringWindow', 'scarringHeight_20'),
@@ -47,35 +22,11 @@ settings_tw = data.frame(
                                          .default = "baseline"),
                                levels = c("baseline", "editing rate", "no. tapes", "tape length")))
 
-path_td = "/Volumes/stadler/cEvoUnpublished/2023-Julia-Celldev/Part1/TiDe"
-path_tw = "/Volumes/stadler/cEvoUnpublished/2023-Julia-Celldev/Part1/Typewriter"
+path_td = file.path(dir, "TiDe")
+path_tw = file.path(dir, "Typewriter")
 
 
-plot_diversity_boxplot <- function(simStats, settings) {
-  
-  data = sapply(simStats, function(x) {x %>% 
-      bind_rows(.id = 'tree') %>%
-      select(tree, seed, barcodeDiv)}, simplify = F) %>%
-    bind_rows(.id = 'setting') %>%
-    left_join(settings) %>%
-    mutate(level = factor(level, levels = settings$level),
-           tree = factor(tree, levels = trees)) 
-  
-  baseline = data %>% filter(setting == 'baseline') %>% pull(barcodeDiv) %>% median
-  
-  g = ggplot(data, aes(x = level, y = barcodeDiv, color = tree)) + 
-    geom_boxplot(outlier.size = 0.5) + 
-    geom_hline(yintercept = baseline, linetype = 'dashed') +
-    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
-    scale_color_manual(values = palette, labels = tree_labels) +
-    labs(x = NULL, y = "Barcode diversity", color = NULL) +
-    facet_grid(cols = vars(manipulation), scales = 'free_x', space = 'free_x')
-  
-  return(g)
-}
-
-
-plot_bias_violin <- function(infP, settings) {
+plot_bias <- function(infP, settings) {
   
   data = sapply(infP, function(x) {
     lapply(x, '[[', 'bias_rel') %>% 
@@ -90,19 +41,20 @@ plot_bias_violin <- function(infP, settings) {
   baseline = data %>% filter(setting == 'baseline') %>% group_by(parameter) %>% summarize(median = median(bias))
   
   g = ggplot(data, aes(x = level, y = bias, color = tree)) + 
-    geom_violin(show.legend = F, position = position_dodge(0.6)) + 
+    geom_boxplot(outlier.size = 0.5) + 
     geom_hline(data = baseline, aes(yintercept = median), linetype = 'dashed') +
-    scale_y_continuous(limits = c(-1, 2), breaks = seq(-1, 2, 1)) +
-    scale_color_manual(values = palette) +
-    labs(x = NULL, y = "Relative bias") +
+    expand_limits(y = c(-0.5, 0.5)) +
+    scale_y_continuous(breaks = seq(-1, 2, 0.5)) + 
+    scale_color_manual(values = palette, labels = tree_labels) +
+    labs(x = NULL, y = "Relative bias", color = NULL) +
     facet_grid(rows = vars(parameter), cols = vars(manipulation), labeller = labeller(parameter = params_labels),
-               scales = 'free_x', space = 'free_x')
+               scales = 'free', space = 'free_x')
   
   return(g)
 }
 
 
-plot_hpd_violin <- function(infP, settings) {
+plot_hpd <- function(infP, settings) {
   
   data = sapply(infP, function(x) {
     lapply(x, '[[', 'hpd_width_rel') %>% 
@@ -117,10 +69,10 @@ plot_hpd_violin <- function(infP, settings) {
   baseline = data %>% filter(setting == 'baseline') %>% group_by(parameter) %>% summarize(median = median(hpd_width))
   
   g = ggplot(data, aes(x = level, y = hpd_width, color = tree)) + 
-    geom_violin(show.legend = F, position = position_dodge(0.6)) + 
+    geom_boxplot(outlier.size = 0.5, show.legend = F) + 
     geom_hline(data = baseline, aes(yintercept = median), linetype = 'dashed') +
     expand_limits(y = c(0, 1)) +
-    scale_y_continuous(breaks = scales::pretty_breaks()) +
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
     scale_color_manual(values = palette) +
     labs(x = NULL, y = "Relative HPD width") +
     facet_grid(rows = vars(parameter), cols = vars(manipulation), labeller = labeller(parameter = params_labels),
@@ -132,21 +84,15 @@ plot_hpd_violin <- function(infP, settings) {
 
 plot_summary <- function(path, settings, title) {
   
-  simStats = sapply(settings$setting, function(s) 
-    readRDS(file.path(path, s, 'analysisOutput', 'simStats.Rdat')), 
-    simplify = F, USE.NAMES = T)
-  
   infP = sapply(settings$setting, function(s) 
     readRDS(file.path(path, s, 'analysisOutput', 'infPerformance.Rdat')), 
     simplify = F, USE.NAMES = T)
   
-  g1 = plot_diversity_boxplot(simStats, settings)
-  g2 = plot_bias_violin(infP, settings)
-  g3 = plot_hpd_violin(infP, settings)
+  g1 = plot_bias(infP, settings)
+  g2 = plot_hpd(infP, settings)
   
-  g = g1 + ggtitle(title) + theme(plot.title.position = "plot") +
-    g2 + g3 +
-    plot_layout(ncol = 1, nrow = 3, heights = c(1, 3, 3))
+  g = g1 + ggtitle(title) + theme(plot.title.position = "plot") + g2 +
+    plot_layout(ncol = 1)
   
   return(g)
 }
@@ -155,7 +101,7 @@ plot_summary <- function(path, settings, title) {
 p_td = plot_summary(path_td, settings_td, 'A: non-sequential recordings')
 p_tw = plot_summary(path_tw, settings_tw, 'B: sequential recordings')
 
-pdf('figures/SuppFigure3.pdf', height = 12, width = 10) 
+pdf('SuppFigure6_ExpVariationsParameters.pdf', height = 12, width = 10) 
 p_td
 p_tw
 dev.off()

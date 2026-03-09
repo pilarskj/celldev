@@ -1,23 +1,27 @@
-# Figure 6
+# Multi-type inference outcomes
 
 library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
-library(ggsignif)
+library(scales)
 library(showtext)
 library(patchwork)
 library(HDInterval)
 
 # plotting options
-palette = c("#E69F00", "#56B4E9", "#009E73","#D55E00", "#CC79A7")
+palette_types = c("0" = "#56B4E9", "1" = "#009E73", "2" = "#E69F00", "3" = "#CC79A7")
+palette_trans = c("distinct" = "#56B4E9", "hierarchical" = "#D55E00")
+labels_trans = c("distinct" = "terminal", "hierarchical" = "chain-like")
 font_add("lmroman", regular = "~/lmroman10-regular.otf") # Latex font
 showtext_auto()
-theme_set(theme_classic(base_size = 12, base_family = 'lmroman'))
+theme_set(theme_classic(base_size = 12, base_family = 'lmroman') +
+            theme(plot.title.position = "plot", plot.subtitle = element_text(margin = margin(l = 30))))
 
 # paths
-data_dir = "/Volumes/stadler/cEvoUnpublished/2023-Julia-Celldev/Part2"
+data_dir = "/Volumes/stadler/cEvoUnpublished/2023-Julia-Celldev/heterog"
 code_dir = "~/Projects/celldev"
+setwd(file.path(code_dir, "figures"))
 
 # objects
 transitions = c("distinct", "hierarchical")
@@ -44,21 +48,20 @@ plot_migration <- function(model, transition, title) {
     mutate(ID = c(1:nrow(.))) %>%
     select(ID, starts_with('migrationRate')) %>%
     pivot_longer(cols = starts_with("migrationRate"),
-                 names_to = c("t", "stat"),
+                 names_to = c("type", "stat"),
                  names_pattern = "migrationRate\\.t(\\d+)_(\\w+)") %>%
-    pivot_wider(names_from = stat, values_from = value) %>%
-    mutate(type = paste0("to type ", t))
+    pivot_wider(names_from = stat, values_from = value)
   
   if (transition == "distinct") {
     data = data %>%
-      mutate(true = case_when(t == "1" ~ 0.04,
-                              t == "2" ~ 0.03,
-                              t == "3" ~ 0.02))
+      mutate(true = case_when(type == "1" ~ 0.04,
+                              type == "2" ~ 0.03,
+                              type == "3" ~ 0.02))
   } else if (transition == "hierarchical") {
     data = data %>%
-      mutate(true = case_when(t == "1" ~ 0.08,
-                              t == "2" ~ 0.06,
-                              t == "3" ~ 0.04))
+      mutate(true = case_when(type == "1" ~ 0.08,
+                              type == "2" ~ 0.06,
+                              type == "3" ~ 0.04))
   }
   
   g = ggplot(data, aes(x = ID, y = median, color = type)) +
@@ -66,9 +69,9 @@ plot_migration <- function(model, transition, title) {
     geom_hline(aes(yintercept = true), color = 'black', alpha = 0.4) +
     geom_hline(aes(yintercept =  prior["lower"]), color = 'black', alpha = 0.4, linetype = 'dotted') +
     geom_hline(aes(yintercept =  prior["upper"]), color = 'black', alpha = 0.4, linetype = 'dotted') +
-    ylim(c(0, 1)) + 
-    scale_color_manual(values = palette[3:5]) +
-    facet_wrap(vars(type)) +
+    scale_y_continuous(limits = c(0,1), breaks = scales::pretty_breaks()) +
+    scale_color_manual(values = palette_types) +
+    facet_wrap(vars(type), labeller = as_labeller(function(x) paste("to type", x))) +
     labs(subtitle = title, x = "Simulation", y = "Posterior transition rate") 
   
   return(g)
@@ -91,42 +94,35 @@ plot_mcc <- function(model) {
     geom_hline(yintercept = 0.2, linetype = 'dashed') + # threshold at 0.2
     scale_x_discrete(labels = NULL) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
-    scale_color_manual(values = palette[1:2], labels = c('terminal', 'chain-like')) +
+    scale_color_manual(values = palette_trans, labels = c('terminal', 'chain-like')) +
     theme(axis.ticks.x = element_blank()) + # remove x axis ticks
-    labs(x = NULL, y = "Weighted RF distance", color = 'transitions')
+    labs(x = NULL, y = "Weighted RF distance", color = 'Transitions')
   
   g2 = ggplot(data, aes(x = transition, y = prop_type_correct, color = transition)) + 
     geom_boxplot() + #show.legend = FALSE
     geom_hline(yintercept = 80, linetype = 'dashed') + # threshold at 0.2
     scale_x_discrete(labels = NULL) +
     scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
-    scale_color_manual(values = palette[1:2], labels = c('terminal', 'chain-like')) +
+    scale_color_manual(values = palette_trans, labels = labels_trans) +
     theme(axis.ticks.x = element_blank()) + # remove x axis ticks
-    labs(x = NULL, y = "Correct ancestral cell types (%)", color = 'transitions') 
+    labs(x = NULL, y = "Correct ancestral cell types (%)", color = 'Transitions') 
   
   return(g1 + g2)
 }
   
 
-p1 = plot_migration('TiDe', 'distinct', 'terminal transitions')
-p2 = plot_migration('TiDe', 'hierarchical', 'chain-like transitions')
-p3 = plot_migration('Typewriter', 'distinct', 'terminal transitions')
-p4 = plot_migration('Typewriter', 'hierarchical', 'chain-like transitions')
-pA = p1 + ggtitle('non-sequential recordings') + p2 + 
-  p3 + ggtitle('sequential recordings') + p4 
-
+p1 = plot_migration('TiDe', 'distinct', labels_trans['distinct'])
+p2 = plot_migration('TiDe', 'hierarchical', labels_trans['hierarchical'])
+p3 = plot_migration('Typewriter', 'distinct', labels_trans['distinct'])
+p4 = plot_migration('Typewriter', 'hierarchical', labels_trans['hierarchical'])
 p5 = plot_mcc('TiDe')
 p6 = plot_mcc('Typewriter')
-pB = p5 / p6 + plot_layout(guides = 'collect') &
-  theme(legend.position = "bottom",
-        legend.background = element_rect(linetype = "dashed", color = 'black', linewidth = 0.2),
-        legend.title = element_text(size = 10), legend.text = element_text(size = 8))
 
+p_ns = ((p1 + ggtitle("A: non-sequential recordings")) / p2 / p5) + plot_layout(axis_titles = "collect")
+p_s = (p3 + ggtitle("B: sequential recordings")) / p4 / p6 + plot_layout(axis_titles = "collect")
 
-pdf('figures/Figure6.pdf', height = 8, width = 12)#, units = "in", res = 300) 
-(pA | pB) + plot_layout(widths = c(2, 1))
-dev.off()
-
-
-
+(p_ns | p_s) + plot_layout(guides = "collect", axis_titles = "collect") &
+    theme(axis.text.x = element_text(size = 8), axis.text.y = element_text(size = 8),
+          legend.position = "bottom", legend.title = element_text(size = 10), legend.text = element_text(size = 8))
+ggsave('pdf/Figure7_MTInference.pdf', height = 10, width = 9)
 
