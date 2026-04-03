@@ -27,7 +27,7 @@ plot_branch_dist <- function(trueDir, infDir) {
     mutate(tree = factor(tree, levels = trees))
   
   g = ggplot(df, aes(x = branch, y = tree, linetype = group, color = tree)) +
-    geom_density_ridges(fill = NA, scale = 1.25) + #jittered_points = TRUE, point_alpha = 0.05, point_size = 0.0001) + 
+    geom_density_ridges(fill = NA, scale = 1.25, jittered_points = TRUE, point_alpha = 0.05, point_size = 0.0001) + 
     scale_x_continuous(limits = c(-2, 40), breaks = seq(0,40,10)) +
     scale_y_discrete(limits = rev(trees)) +
     scale_color_manual(values = palette, labels = tree_labels) +
@@ -40,16 +40,23 @@ plot_branch_dist <- function(trueDir, infDir) {
 # # Baseline scenarios
 #g_ns = plot_branch_dist(trueDir = paste0(dir, "/Trees"), infDir = paste0(dir, "/TiDe/baseline/inferenceOutput"))
 #g_s = plot_branch_dist(trueDir = paste0(dir, "/Trees"), infDir = paste0(dir, "/Typewriter/baseline/inferenceOutput"))
-# Noisy data
-g_ns = plot_branch_dist(trueDir = paste0(dir, "/TiDe/baseline_noise/filteredTrees"), infDir = paste0(dir, "/TiDe/baseline_noise/inferenceOutput"))
-g_s = plot_branch_dist(trueDir = paste0(dir, "/Typewriter/baseline_noise/filteredTrees"), infDir = paste0(dir, "/Typewriter/baseline_noise/inferenceOutput"))
-(g_ns + ggtitle("A: non-sequential recordings (noisy)")) +
-  (g_s + ggtitle("B: sequential recordings (noisy)")) +
+
+# # Noisy data
+# g_ns = plot_branch_dist(trueDir = paste0(dir, "/TiDe/baseline_noise/filteredTrees"), infDir = paste0(dir, "/TiDe/baseline_noise/inferenceOutput"))
+# g_s = plot_branch_dist(trueDir = paste0(dir, "/Typewriter/baseline_noise/filteredTrees"), infDir = paste0(dir, "/Typewriter/baseline_noise/inferenceOutput"))
+
+# # Sequential editing
+# g_ns = plot_branch_dist(trueDir = paste0(dir, "/Trees"), infDir = paste0(dir, "/TiDe/baseline/inferenceOutput"))
+# g_s = plot_branch_dist(trueDir = paste0(dir, "/Trees"), infDir = paste0(dir, "/Typewriter/sequential_betterPrior/inferenceOutput"))
+
+(g_ns + ggtitle("A: non-sequential recordings (noisy)")) + #  editing
+  (g_s + ggtitle("B: sequential editing recordings (noisy)")) +
   plot_layout(guides = "collect", axis_titles = "collect") &
   theme(plot.title.position = "plot",
         legend.position = "bottom", legend.direction = "vertical", legend.justification = "right")
 #ggsave('pdf/SuppFigure4_BaselineBranches.pdf', height = 8, width = 8)
-ggsave('pdf/SuppFigure12_NoiseBranches.pdf', height = 8, width = 8)
+ggsave('pdf/SuppFigure13_NoiseBranches.pdf', height = 8, width = 8)
+#ggsave('pdf/SuppFigure_SequentialBranches.pdf', height = 8, width = 8)
 
 
 # Comparison

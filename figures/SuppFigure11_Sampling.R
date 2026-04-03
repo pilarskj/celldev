@@ -14,23 +14,14 @@ paths_tw = c("large" = paste0(dir, "/Typewriter/baseline_large/analysisOutput"),
              "sampled" = paste0(dir, "/Typewriter/baseline_sampled/analysisOutput"))
 
 settings = c("large", "sampled")
-setting_labels = c("large" = "larger trees\n(10% sampling)", 
+setting_labels = c("large" = "larger trees\n(complete or 10% sampling)", 
                    "sampled" = "smaller trees\n(1% sampling)")
-
-# only look at trees with sampling
-nRuns = 60
-palette = c("#56B4E9", "#D55E00", "#CC79A7")
-trees = c("tree_ss", "tree_sds", "tree_bd")
-tree_labels = c("tree_ss" = "synchronous trees",
-                "tree_sds" = "synchronous trees with cell death",
-                "tree_bd" = "birth-death trees")
-
 
 # tree inference
 plot_wRF <- function(data) {
   
   g = ggplot(data, aes(x = setting, y = wRF, color = tree)) + 
-    geom_boxplot(outlier.size = 0.5) + 
+    geom_boxplot(outlier.size = 0.5, position = position_dodge2(preserve = "single")) + 
     scale_x_discrete(labels = setting_labels) +
     scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.2)) +
     scale_color_manual(values = palette, labels = tree_labels) +
@@ -43,7 +34,7 @@ plot_wRF <- function(data) {
 plot_shPI <- function(data) {
   
   g = ggplot(data, aes(x = setting, y = shPI, color = tree)) + 
-    geom_boxplot(outlier.size = 0.5) + 
+    geom_boxplot(outlier.size = 0.5, position = position_dodge2(preserve = "single")) + 
     scale_x_discrete(labels = setting_labels) +
     scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.2)) +
     scale_color_manual(values = palette, labels = tree_labels) +
@@ -56,7 +47,7 @@ plot_shPI <- function(data) {
 plot_KS <- function(data) {
   
   g = ggplot(data, aes(x = setting, y = KS, color = tree)) + 
-    geom_boxplot(outlier.size = 0.5) + 
+    geom_boxplot(outlier.size = 0.5, position = position_dodge2(preserve = "single")) + 
     scale_x_discrete(labels = setting_labels) +
     scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.2)) +
     scale_color_manual(values = palette, labels = tree_labels) +
@@ -84,7 +75,7 @@ plot_bias <- function(infP, converged_runs) {
     filter(converged)
   
   g = ggplot(data, aes(x = parameter, y = bias, color = tree)) + 
-    geom_boxplot(outlier.size = 0.5, show.legend = F) + 
+    geom_boxplot(outlier.size = 0.5, show.legend = F, position = position_dodge2(preserve = "single")) + 
     geom_hline(yintercept = 0, linetype = 'dashed') + 
     expand_limits(y = c(-0.2, 0.2)) +
     scale_x_discrete(labels = params_labels) +
@@ -116,7 +107,7 @@ plot_hpd <- function(infP, converged_runs) {
     filter(converged)
   
   g = ggplot(data, aes(x = parameter, y = hpd_width, color = tree)) + 
-    geom_boxplot(outlier.size = 0.5, show.legend = F) + 
+    geom_boxplot(outlier.size = 0.5, show.legend = F, position = position_dodge2(preserve = "single")) + 
     expand_limits(y = c(0, 0.5)) +
     scale_x_discrete(labels = params_labels) +
     scale_y_continuous(breaks = scales::pretty_breaks()) +
@@ -174,7 +165,7 @@ plot_summary <- function(paths, title) {
 p_td = plot_summary(paths_td, 'A: non-sequential recordings')
 p_tw = plot_summary(paths_tw, 'B: sequential recordings')
 
-pdf('pdf/SuppFigure10_Sampling.pdf', height = 8, width = 9) 
+pdf('pdf/SuppFigure11_Sampling.pdf', height = 8, width = 10) 
 p_td
 p_tw
 dev.off()

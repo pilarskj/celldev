@@ -28,15 +28,29 @@ g1 = ggplot(mcc_data, aes(x = setting, y = wRF)) +
   labs(x = NULL, y = "Weighted RF distance", tag = "A")
   
 # topology only
-g2 = ggplot(mcc_data, aes(x = setting, y = shPI)) + 
+g2 = ggplot(mcc_data, aes(x = setting, y = RF)) + 
   geom_boxplot(aes(color = setting), outlier.size = 0.5) + 
+  geom_signif(comparisons = list(c("non-sequential", "sequential")), test = 'wilcox.test', test.args = list(paired = T, alternative = "greater"), map_signif_level = T) +
+  scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.2)) +
+  scale_color_manual(values = palette) +
+  labs(x = NULL, y = "RF distance")
+
+g3 = ggplot(mcc_data, aes(x = setting, y = shPI)) +
+  geom_boxplot(aes(color = setting), outlier.size = 0.5) +
   geom_signif(comparisons = list(c("non-sequential", "sequential")), test = 'wilcox.test', test.args = list(paired = T, alternative = "less"), map_signif_level = T) +
   scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.2)) +
   scale_color_manual(values = palette) +
   labs(x = NULL, y = "Shared PI")
 
-# branches only
-g3 = ggplot(mcc_data, aes(x = setting, y = KS)) + 
+# branch lengths only
+g4 = ggplot(mcc_data, aes(x = setting, y = WS)) + 
+  geom_boxplot(aes(color = setting), outlier.size = 0.5) + 
+  geom_signif(comparisons = list(c("non-sequential", "sequential")), test = 'wilcox.test', test.args = list(paired = T, alternative = "greater"), map_signif_level = T) +
+  scale_y_continuous(limits = c(0, 2.5)) + #, breaks = seq(0, 1, 0.2)) +
+  scale_color_manual(values = palette) +
+  labs(x = NULL, y = "Wasserstein distance")
+
+g5 = ggplot(mcc_data, aes(x = setting, y = KS)) + 
   geom_boxplot(aes(color = setting), outlier.size = 0.5) + 
   geom_signif(comparisons = list(c("non-sequential", "sequential")), test = 'wilcox.test', test.args = list(paired = T, alternative = "greater"), map_signif_level = T) +
   scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.2)) +
@@ -96,8 +110,10 @@ s = mcc_data %>% filter(setting == "sequential") %>% pull(wRF)
 #s = hpd %>% filter(parameter == "deathRate", setting == "sequential") %>% pull(hpd_proportion)
 wilcox.test(ns, s, paired = TRUE, alternative = "greater")
 
-(g1 + g2 + g3) / (gBias + gHPD) + plot_layout(guides = "collect") & 
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), legend.position = "bottom", legend.title = element_blank()) 
+(g1 | g2 | g3 | g4 | g5) / (gBias | gHPD) + plot_layout(guides = "collect") & 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_text(size = 8),
+        legend.position = "bottom", legend.title = element_blank()) 
 ggsave('pdf/Figure4_SeqEditing.pdf', height = 6, width = 8)
 
 

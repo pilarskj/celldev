@@ -155,4 +155,4 @@ g3 = ggplot(df, aes(x = method, y = runtime_conv, color = tree)) +
 
 # combine plots
 (g1 + ggtitle("A")) / (g2 + ggtitle("B")) / g3 & theme(plot.title.position = "plot")
-ggsave("pdf/SuppFigure11_Runtime.pdf", height = 10, width = 10)
+ggsave("pdf/SuppFigure12_Runtime.pdf", height = 10, width = 10)

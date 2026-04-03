@@ -101,11 +101,11 @@ plot_trees <- function(x, title = NULL) {
 # g_h = plot_trees(2, "B: chain-like transitions")
 # 
 # (g_d | g_h) + plot_layout(guides = "collect") 
-# ggsave("pdf/SuppFigure13_heterogTrees.pdf", height = 11, width = 9)
+# ggsave("pdf/SuppFigure14_heterogTrees.pdf", height = 11, width = 9)
 
 g = lapply(c(1:4), plot_trees)
 wrap_plots(g, nrow = 4, guides = "collect")
-ggsave("pdf/SuppFigure14_biasedTrees.pdf", height = 9, width = 8)
+ggsave("pdf/SuppFigure15_biasedTrees.pdf", height = 9, width = 8)
 
 
 

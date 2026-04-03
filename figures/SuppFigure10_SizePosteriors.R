@@ -13,16 +13,11 @@ paths_tw = c("large" = paste0(dir, "/Typewriter/baseline_large/analysisOutput"),
 tree_params_fs = c("large" =  paste0(dir, "/LargeTrees/tree_params.csv"),
                    "sampled" = paste0(dir, "/SampledTrees/tree_params.csv"))
 
-setting_labels = c("large" = "larger trees (10% sampling)", 
+setting_labels = c("large" = "larger trees (complete or 10% sampling)", 
                    "sampled" = "smaller trees (1% sampling)")
 
 # only look at trees with sampling
-nRuns = 60
-palette = c("#56B4E9", "#D55E00", "#CC79A7")
-trees = c("tree_ss", "tree_sds", "tree_bd")
-tree_labels = c("tree_ss" = "synchronous trees",
-                "tree_sds" = "synchronous trees with cell death",
-                "tree_bd" = "birth-death trees")
+nRuns = 100
 
 # only show phylodynamic parameters and editing rate
 params = c("birthRate", "deathRate", "growthRate", "editRate")
@@ -37,12 +32,9 @@ treeParams = lapply(tree_params_fs, function(f) {
     mutate(growthRate_true = birthRate_true - deathRate_true) %>%
     mutate(seed = str_extract(tree, '[0-9]+') %>% as.numeric,
            tree = str_extract(tree, 'tree_[a-z]+')) %>%
-    filter(tree %in% trees) %>%
     mutate(tree = factor(tree, levels = trees))
   return(df)
 })  
-# should be the same!
-all(treeParams[["large"]] == treeParams[["sampled"]])
 treeParams = treeParams[["large"]]
 
 editRate_true = 0.05
@@ -54,7 +46,6 @@ plot_posteriors <- function(paths, title) {
   infOutputDat = lapply(paths, function(p) {
     dat = readRDS(file.path(p, "infOutput.Rdat")) %>%
       bind_rows(.id = "tree") %>% 
-      filter(tree %in% trees) %>%
       left_join(treeParams, by = c('tree', 'seed')) %>% # join with true params
       mutate(tree = factor(tree, levels = trees)) %>%
       mutate(converged = ifelse(minESS >= 200, T, F))
@@ -74,7 +65,7 @@ plot_posteriors <- function(paths, title) {
     scale_color_manual(values = palette, labels = tree_labels) +
     scale_alpha_manual(values = c("TRUE" = 0.6, "FALSE" = 0.1)) +
     labs(x = "Simulation", y = "Posterior division rate", color = NULL) +
-    facet_wrap(~setting, labeller = as_labeller(setting_labels))
+    facet_grid(~setting, labeller = as_labeller(setting_labels), scales = "free_x", space = "free_x")
   
   # death rate
   pD = ggplot(data = infOutputDat, aes(x = ID, y = deathRate_median, color = tree)) +
@@ -87,7 +78,7 @@ plot_posteriors <- function(paths, title) {
     scale_color_manual(values = palette, labels = tree_labels) +
     scale_alpha_manual(values = c("TRUE" = 0.6, "FALSE" = 0.1)) +
     labs(x = "Simulation", y = "Posterior death rate", color = NULL) +
-    facet_wrap(~setting) +
+    facet_grid(~setting, scales = "free_x", space = "free_x") +
     theme(strip.background = element_blank(), strip.text = element_blank())
   
   # growth rate
@@ -98,7 +89,7 @@ plot_posteriors <- function(paths, title) {
     scale_color_manual(values = palette, labels = tree_labels) +
     scale_alpha_manual(values = c("TRUE" = 0.6, "FALSE" = 0.1)) +
     labs(x = "Simulation", y = "Posterior growth rate", color = NULL) +
-    facet_wrap(~setting) +
+    facet_grid(~setting, scales = "free_x", space = "free_x") +
     theme(strip.background = element_blank(), strip.text = element_blank())
   
   # editing rate
@@ -107,12 +98,13 @@ plot_posteriors <- function(paths, title) {
                 alpha = 0.2, fill = "grey", color = 'grey', linewidth = 0) +
     #geom_hline(aes(yintercept = priors$editRate["median"]), linetype = "dashed", color = "grey") + 
     geom_pointrange(aes(ymin = editRate_lower, ymax = editRate_upper, alpha = converged), size = 0.1, linewidth = 1) + 
-    geom_segment(aes(x = 0, xend = nRuns, y = editRate_true, yend = editRate_true), color = 'black', alpha = 0.5, linewidth = 0.05) +
+    #geom_segment(aes(x = 0, xend = nRuns, y = editRate_true, yend = editRate_true), color = 'black', alpha = 0.5, linewidth = 0.05) +
+    geom_step(y = editRate_true, color = 'black', alpha = 0.5) +
     scale_y_continuous(limits = c(0, 0.26), breaks = seq(0, 0.25, by = 0.05)) +
     scale_color_manual(values = palette, labels = tree_labels) +
     scale_alpha_manual(values = c("TRUE" = 0.6, "FALSE" = 0.1)) +
     labs(x = "Simulation", y = "Posterior editing rate", color = NULL) +
-    facet_wrap(~setting) +
+    facet_grid(~setting, scales = "free_x", space = "free_x") +
     theme(strip.background = element_blank(), strip.text = element_blank()) 
 
   plot = (pB + ggtitle(title) + theme(plot.title.position = "plot")) + pD + pG + pE + 
@@ -125,7 +117,7 @@ plot_posteriors <- function(paths, title) {
 p_td = plot_posteriors(paths_td, 'A: non-sequential recordings')
 p_tw = plot_posteriors(paths_tw, 'B: sequential recordings')
 
-pdf('pdf/SuppFigure9_SizePosteriors.pdf', height = 9, width = 9) 
+pdf('pdf/SuppFigure10_SizePosteriors.pdf', height = 9, width = 11) 
 p_td
 p_tw
 dev.off()

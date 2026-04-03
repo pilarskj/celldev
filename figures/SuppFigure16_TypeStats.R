@@ -87,7 +87,7 @@ p4 = plot_typestats("Typewriter", "hierarchical", "(II) chain-like transitions")
 p_ns = (p1 | p2) + plot_layout(axis_titles = "collect") + plot_annotation(title = "A: non-sequential recordings")
 p_s = (p3 | p4) + plot_layout(axis_titles = "collect") + plot_annotation(title = "B: sequential recordings")
 
-pdf('pdf/SuppFigure15_TypeStats.pdf', height = 10, width = 9) 
+pdf('pdf/SuppFigure16_TypeStats.pdf', height = 10, width = 9) 
 p_ns
 p_s
 dev.off()

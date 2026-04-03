@@ -147,4 +147,4 @@ g_td = plot_summary('TiDe', 'A: non-sequential recordings')
 g_tw = plot_summary('Typewriter', 'B: sequential recordings')
 
 (g_td | g_tw) + plot_layout(guides = 'collect')
-ggsave("pdf/SuppFigure16_MTParameterInference.pdf", height = 10, width = 10)
+ggsave("pdf/SuppFigure17_MTParameterInference.pdf", height = 10, width = 10)

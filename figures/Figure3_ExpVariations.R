@@ -183,3 +183,54 @@ g = g1 + ggtitle("C") + theme(plot.title.position = "plot") + g2 + g3 + plot_lay
 # final plot
 p / g
 ggsave('pdf/Figure3_ExpVariations.pdf', height = 12, width = 11) 
+
+
+### add to supplement:
+gPI = ggplot(df, aes(x = propUnique, y = shPI)) +
+  geom_point(aes(color = tree), size = 0.5) +
+  stat_smooth(method = "lm", linewidth = 0.2, alpha = 0.2, color = "black") +
+  stat_cor(aes(label = ..r.label..), method = "kendall", cor.coef.name = "cor.") +
+  scale_x_continuous(limits = c(0,100), breaks = pretty_breaks()) +
+  scale_y_continuous(limits = c(0,1.1), breaks = pretty_breaks()) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  labs(x = "Prop. unique barcodes (%)", y = "Shared PI", color = NULL)
+
+gKS = ggplot(df, aes(x = propUnique, y = KS)) +
+  geom_point(aes(color = tree), size = 0.5) +
+  stat_smooth(method = "lm", linewidth = 0.2, alpha = 0.2, color = "black") +
+  stat_cor(aes(label = ..r.label..), method = "kendall", cor.coef.name = "cor.") +
+  scale_x_continuous(limits = c(0,100), breaks = pretty_breaks()) +
+  scale_y_continuous(limits = c(0,1.1), breaks = pretty_breaks()) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  labs(x = "Prop. unique barcodes (%)", y = "KS distance", color = NULL)
+
+# biases to division and death 
+dfbias = sapply(infP, function(x) {
+  lapply(x, '[[', 'bias_rel') %>% 
+    bind_rows(.id = 'tree') %>%
+    select(tree, seed, birthRate, deathRate)}, simplify = F) %>%
+  bind_rows(.id = 'setting') 
+df = dfsim %>% full_join(dfbias) %>% full_join(dfmcc) %>%
+  mutate(tree = factor(tree, levels = trees)) 
+
+gBiasDiv = ggplot(df, aes(x = propUnique, y = birthRate)) +
+  geom_point(aes(color = tree), size = 0.5) +
+  stat_smooth(method = "lm", linewidth = 0.2, alpha = 0.2, color = "black") +
+  stat_cor(aes(label = ..r.label..), method = "kendall", cor.coef.name = "cor.") +
+  scale_x_continuous(limits = c(0,100), breaks = pretty_breaks()) +
+  scale_y_continuous(limits = c(-0.5,0.5), breaks = pretty_breaks()) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  labs(x = "Prop. unique barcodes (%)", y = "Relative bias\n(division rate)", color = NULL)
+
+gBiasDeath = ggplot(df, aes(x = propUnique, y = deathRate)) +
+  geom_point(aes(color = tree), size = 0.5) +
+  stat_smooth(method = "lm", linewidth = 0.2, alpha = 0.2, color = "black") +
+  stat_cor(aes(label = ..r.label..), method = "kendall", cor.coef.name = "cor.") +
+  scale_x_continuous(limits = c(0,100), breaks = pretty_breaks()) +
+  scale_color_manual(values = palette, labels = tree_labels) +
+  labs(x = "Prop. unique barcodes (%)", y = "Relative bias\n(death rate)", color = NULL)
+
+(gPI | gKS) / (gBiasDiv | gBiasDeath) + plot_layout(guides = "collect") &
+  theme(legend.position = 'bottom', legend.direction = "vertical", legend.justification = "right")
+
+ggsave('pdf/SuppFigure8_DiversityBiases.pdf', height = 8, width = 8) 
